@@ -1,0 +1,82 @@
+[
+  {
+    "id": "dash_fintech_slas",
+    "title": "Global FinTech SLA & Latency Board",
+    "category": "SLA Monitoring",
+    "createdBy": "Amit Dey",
+    "updatedAt": "10m ago",
+    "widgets": [
+      {
+        "id": "w_101",
+        "title": "P99 Gateway Latency (ms)",
+        "type": "time_series",
+        "metricSource": "p99_latency_ms",
+        "size": "2x1",
+        "unit": "ms",
+        "currentValue": "18 ms",
+        "dataPoints": [
+          { "time": "12:00", "value": 14 },
+          { "time": "13:00", "value": 16 },
+          { "time": "14:00", "value": 22 },
+          { "time": "15:00", "value": 18 },
+          { "time": "16:00", "value": 15 },
+          { "time": "17:00", "value": 18 }
+        ]
+      },
+      {
+        "id": "w_102",
+        "title": "Active Ingestion RPS",
+        "type": "stat_metric",
+        "metricSource": "gateway_rps_total",
+        "size": "1x1",
+        "unit": "RPS",
+        "currentValue": "1,650 RPS",
+        "dataPoints": []
+      },
+      {
+        "id": "w_103",
+        "title": "Guardrail Interception Distribution",
+        "type": "bar_gauge",
+        "metricSource": "guardrail_interceptions_by_rule",
+        "size": "3x1",
+        "unit": "incidents",
+        "currentValue": "180 total",
+        "dataPoints": [
+          { "time": "PII Masking", "value": 94 },
+          { "time": "OPA Authz", "value": 48 },
+          { "time": "Prompt Shield", "value": 26 },
+          { "time": "Toxicity", "value": 12 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dash_security_audit",
+    "title": "Security & PII Breach Incidents",
+    "category": "Security Operations",
+    "createdBy": "Security Team",
+    "updatedAt": "1h ago",
+    "widgets": [
+      {
+        "id": "w_201",
+        "title": "PII Entity Redaction Rate",
+        "type": "stat_metric",
+        "metricSource": "pii_masked_count",
+        "size": "1x1",
+        "unit": "%",
+        "currentValue": "98.4%",
+        "dataPoints": []
+      },
+      {
+        "id": "w_202",
+        "title": "Intercepted Threat Logs",
+        "type": "logs_table",
+        "metricSource": "threat_logs_stream",
+        "size": "3x1",
+        "unit": "logs",
+        "currentValue": "3 Threats",
+        "dataPoints": []
+      }
+    ]
+  }
+]

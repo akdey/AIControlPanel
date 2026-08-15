@@ -1,0 +1,77 @@
+[
+  {
+    "id": "trace-abc-123",
+    "timestamp": "2026-08-15T18:40:00Z",
+    "name": "chat-completion-request",
+    "sessionId": "user-session-001",
+    "userId": "user-12345",
+    "input": {
+      "messages": [{"role": "user", "content": "How do I reset my password?"}]
+    },
+    "output": {
+      "content": "You can reset it via the settings page."
+    },
+    "metadata": {
+      "environment": "production",
+      "model": "gpt-4o"
+    },
+    "tags": ["beta", "mobile"],
+    "usage": {
+      "promptTokens": 50,
+      "completionTokens": 20,
+      "totalTokens": 70
+    },
+    "cost": 0.002,
+    "latency": 4.0
+  },
+  {
+    "id": "trace-abc-124",
+    "timestamp": "2026-08-15T18:41:00Z",
+    "name": "chat-completion-request",
+    "sessionId": "user-session-001",
+    "userId": "user-12345",
+    "input": {
+      "messages": [{"role": "user", "content": "Where is the settings page?"}]
+    },
+    "output": {
+      "content": "It is in the top right corner of the dashboard."
+    },
+    "metadata": {
+      "environment": "production",
+      "model": "gpt-4o"
+    },
+    "tags": ["beta", "mobile"],
+    "usage": {
+      "promptTokens": 60,
+      "completionTokens": 20,
+      "totalTokens": 80
+    },
+    "cost": 0.0025,
+    "latency": 2.4
+  },
+  {
+    "id": "trace-xyz-987",
+    "timestamp": "2026-08-15T19:00:00Z",
+    "name": "summarize-document",
+    "sessionId": "user-session-002",
+    "userId": "user-999",
+    "input": {
+      "text": "Long document text here..."
+    },
+    "output": {
+      "content": "Summary of the document."
+    },
+    "metadata": {
+      "environment": "staging",
+      "model": "claude-3-5-sonnet"
+    },
+    "tags": ["internal"],
+    "usage": {
+      "promptTokens": 250,
+      "completionTokens": 50,
+      "totalTokens": 300
+    },
+    "cost": 0.009,
+    "latency": 5.1
+  }
+]

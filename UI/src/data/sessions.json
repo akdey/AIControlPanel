@@ -1,0 +1,26 @@
+[
+  {
+    "id": "user-session-001",
+    "createdAt": "2026-08-15T18:40:00Z",
+    "projectId": "proj-abc-123",
+    "traces": ["trace-abc-123", "trace-abc-124"],
+    "metrics": {
+      "totalTraces": 2,
+      "totalTokens": 150,
+      "totalCost": 0.0045,
+      "averageLatency": 3.2
+    }
+  },
+  {
+    "id": "user-session-002",
+    "createdAt": "2026-08-15T19:00:00Z",
+    "projectId": "proj-abc-123",
+    "traces": ["trace-xyz-987"],
+    "metrics": {
+      "totalTraces": 1,
+      "totalTokens": 300,
+      "totalCost": 0.009,
+      "averageLatency": 5.1
+    }
+  }
+]

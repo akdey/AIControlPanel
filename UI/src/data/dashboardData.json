@@ -1,0 +1,98 @@
+{
+  "summaryKpis": {
+    "totalInvocations": "1,482,910",
+    "invocationsGrowthPct": 12.4,
+    "p99LatencyMs": 18,
+    "guardrailIncidents": 180,
+    "mitigationRatePct": 100,
+    "activeFleets": 12,
+    "workspacesCount": 3,
+    "currentSpendUsd": 3130,
+    "budgetCapUsd": 5000,
+    "spendPercentage": 62.6,
+    "totalSavedUsd": 4210.75
+  },
+  "latencyPercentiles": [
+    { "label": "P50 Latency", "value": "4 ms", "target": "< 10ms", "color": "text-emerald-400" },
+    { "label": "P95 Latency", "value": "12 ms", "target": "< 25ms", "color": "text-blue-400" },
+    { "label": "P99 Latency", "value": "18 ms", "target": "< 50ms", "color": "text-amber-400" },
+    { "label": "Max Latency", "value": "46 ms", "target": "< 100ms", "color": "text-purple-400" }
+  ],
+  "savingsBreakdown": [
+    { "name": "Semantic Cache Router (Direct Hit)", "saved": "$1,840.50", "pct": 43.7, "color": "bg-blue-500" },
+    { "name": "LLM Lingua Context Pruning", "saved": "$920.25", "pct": 21.8, "color": "bg-emerald-500" },
+    { "name": "SLM Fast Model Offloading", "saved": "$1,450.00", "pct": 34.5, "color": "bg-purple-500" }
+  ],
+  "securityEventsFeed": [
+    {
+      "id": "evt_901",
+      "timestamp": "22:42:10",
+      "agent": "Support Automation Tier-1",
+      "threat": "PII Exposure (Email & SSN)",
+      "rule": "presidio_analyzer",
+      "action": "Redacted with Fake Tokens",
+      "severity": "medium"
+    },
+    {
+      "id": "evt_902",
+      "timestamp": "22:40:05",
+      "agent": "Automated Claims Evaluator",
+      "threat": "Unauthorized Tool Invocation (`drop table`)",
+      "rule": "opa_cedar_authz",
+      "action": "403 Forbidden (Halted)",
+      "severity": "critical"
+    },
+    {
+      "id": "evt_903",
+      "timestamp": "22:35:12",
+      "agent": "Wealth Advisor Assistant",
+      "threat": "Adversarial System Override",
+      "rule": "rebuff_prompt_shield",
+      "action": "Intercepted & Dropped",
+      "severity": "high"
+    }
+  ],
+  "hourlyThroughput": [
+    { "time": "00:00", "rps": 45 },
+    { "time": "01:00", "rps": 60 },
+    { "time": "02:00", "rps": 80 },
+    { "time": "03:00", "rps": 55 },
+    { "time": "04:00", "rps": 90 },
+    { "time": "05:00", "rps": 120 },
+    { "time": "06:00", "rps": 140 },
+    { "time": "07:00", "rps": 110 },
+    { "time": "08:00", "rps": 160 },
+    { "time": "09:00", "rps": 185 },
+    { "time": "10:00", "rps": 210 },
+    { "time": "11:00", "rps": 195 },
+    { "time": "12:00", "rps": 230 },
+    { "time": "13:00", "rps": 260 },
+    { "time": "14:00", "rps": 240 },
+    { "time": "15:00", "rps": 280 },
+    { "time": "16:00", "rps": 310 },
+    { "time": "17:00", "rps": 290 },
+    { "time": "18:00", "rps": 340 },
+    { "time": "19:00", "rps": 320 },
+    { "time": "20:00", "rps": 360 },
+    { "time": "21:00", "rps": 390 },
+    { "time": "22:00", "rps": 420 },
+    { "time": "23:00", "rps": 400 }
+  ],
+  "guardrailDistribution": [
+    { "id": "pii", "name": "PII Masking & Redaction", "count": 94, "pct": 52, "severity": "medium", "color": "bg-blue-500" },
+    { "id": "opa", "name": "OPA / Cedar Tool Authorization", "count": 48, "pct": 26, "severity": "high", "color": "bg-emerald-500" },
+    { "id": "rebuff", "name": "Prompt Injection Shield", "count": 26, "pct": 14, "severity": "critical", "color": "bg-amber-500" },
+    { "id": "toxicity", "name": "Toxicity Moderation", "count": 12, "pct": 8, "severity": "low", "color": "bg-rose-500" }
+  ],
+  "regionalHealth": [
+    { "region": "US-East (N. Virginia)", "rps": 840, "latencyMs": 12, "status": "healthy", "egressSlaPct": 99.99 },
+    { "region": "US-West (Oregon)", "rps": 420, "latencyMs": 15, "status": "healthy", "egressSlaPct": 100.0 },
+    { "region": "EU-West (Frankfurt)", "rps": 210, "latencyMs": 22, "status": "healthy", "egressSlaPct": 99.98 },
+    { "region": "AP-South (Mumbai)", "rps": 110, "latencyMs": 34, "status": "degraded", "egressSlaPct": 99.90 }
+  ],
+  "modelBreakdown": [
+    { "model": "OpenAI gpt-4o-mini", "category": "SLM Fast Router", "sharePct": 48, "tokens": "42.8M", "costUsd": "$920.00" },
+    { "model": "Anthropic Claude 3.5 Sonnet", "category": "Reasoning", "sharePct": 32, "tokens": "18.4M", "costUsd": "$1,450.00" },
+    { "model": "OpenAI gpt-4o", "category": "Deep Evaluation", "sharePct": 20, "tokens": "8.1M", "costUsd": "$760.00" }
+  ]
+}

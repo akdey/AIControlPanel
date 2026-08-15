@@ -1,0 +1,432 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.5.0",
+  "categories": [
+    {
+      "id": "guardrails",
+      "label": "Guardrails & Moderation",
+      "icon": "ShieldAlert",
+      "subcategories": [
+        { "id": "input_safety", "label": "PII & Secret Protection" },
+        { "id": "content_moderation", "label": "Content Moderation & Jailbreaks" }
+      ]
+    },
+    {
+      "id": "routing",
+      "label": "Traffic & Routing",
+      "icon": "GitFork",
+      "subcategories": [
+        { "id": "logic_gates", "label": "Decision Gates & Branching" },
+        { "id": "model_routing", "label": "Model Fallbacks & Load Balancing" }
+      ]
+    },
+    {
+      "id": "policy",
+      "label": "Policy & Governance",
+      "icon": "Lock",
+      "subcategories": [
+        { "id": "access_control", "label": "OPA & Tool Authorization" },
+        { "id": "compliance_audit", "label": "Token Budgeting & Audit Logs" }
+      ]
+    },
+    {
+      "id": "optimization",
+      "label": "Optimization & Caching",
+      "icon": "Zap",
+      "subcategories": [
+        { "id": "caching", "label": "Semantic Vector Cache" },
+        { "id": "context_window", "label": "Context Window Compression" }
+      ]
+    },
+    {
+      "id": "sandboxing",
+      "label": "Execution Sandbox",
+      "icon": "Box",
+      "subcategories": [
+        { "id": "microvm", "label": "Firecracker & WASI Isolation" },
+        { "id": "tool_verification", "label": "Tool Code Audit" }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "ctrl_pii_masking",
+      "type": "guardrail_evaluator",
+      "name": "PII Masking & Redaction",
+      "category": "guardrails",
+      "subcategory": "input_safety",
+      "description": "Scans context for sensitive entities using Microsoft Presidio and redacts or fakes values.",
+      "ioValidation": {
+        "allowedInputs": ["prompt_object", "raw_text", "tool_payload"],
+        "allowedOutputs": ["sanitized_prompt_object", "redaction_metadata"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+        "outputs": [{ "id": "out_sanitized", "label": "Sanitized Out", "type": "sanitized_prompt_object" }]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "entity_types",
+            "label": "Target PII Entities",
+            "type": "multi_select",
+            "required": true,
+            "options": [
+              { "label": "Email Address", "value": "EMAIL_ADDRESS" },
+              { "label": "Phone Number", "value": "PHONE_NUMBER" },
+              { "label": "Credit Card", "value": "CREDIT_CARD" },
+              { "label": "US SSN / National ID", "value": "GOV_ID" },
+              { "label": "IP Address", "value": "IP_ADDRESS" },
+              { "label": "Crypto Wallet", "value": "CRYPTO_ADDRESS" }
+            ],
+            "defaultValue": ["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD"]
+          },
+          {
+            "name": "masking_strategy",
+            "label": "Masking Strategy",
+            "type": "radio_group",
+            "options": [
+              { "label": "Redact with Token (<EMAIL>)", "value": "token" },
+              { "label": "Synthetic Data (Faker)", "value": "faker" },
+              { "label": "Blackout (***)", "value": "asterisk" }
+            ],
+            "defaultValue": "token"
+          },
+          {
+            "name": "custom_regex_list",
+            "label": "Custom Regex Patterns",
+            "type": "tag_input",
+            "placeholder": "Add custom regex...",
+            "defaultValue": ["(?i)secret_[a-z0-9]+"]
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "presidio_analyzer",
+        "action": "mutate_payload"
+      }
+    },
+    {
+      "id": "ctrl_prompt_injection",
+      "type": "guardrail_evaluator",
+      "name": "Prompt Injection Shield",
+      "category": "guardrails",
+      "subcategory": "content_moderation",
+      "description": "Detects jailbreak patterns, system prompt overrides, and adversarial instructions.",
+      "ioValidation": {
+        "allowedInputs": ["prompt_object", "raw_text", "sanitized_prompt_object"],
+        "allowedOutputs": ["sanitized_prompt_object", "halt_signal"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_payload", "label": "Prompt Payload", "type": "prompt_object" }],
+        "outputs": [
+          { "id": "out_safe", "label": "Safe Payload", "type": "sanitized_prompt_object" },
+          { "id": "out_jailbreak", "label": "Jailbreak Halted", "type": "halt_signal" }
+        ]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "sensitivity",
+            "label": "Classifier Sensitivity",
+            "type": "dropdown",
+            "options": [
+              { "label": "Strict (Zero Tolerance)", "value": "strict" },
+              { "label": "Balanced (Recommended)", "value": "balanced" },
+              { "label": "Permissive", "value": "permissive" }
+            ],
+            "defaultValue": "strict"
+          },
+          {
+            "name": "jailbreak_action",
+            "label": "Detection Action",
+            "type": "radio_group",
+            "options": [
+              { "label": "Halt & Drop Connection", "value": "halt" },
+              { "label": "Sanitize & Strip Instructions", "value": "strip" },
+              { "label": "Flag & Route to Human Review", "value": "human_flag" }
+            ],
+            "defaultValue": "halt"
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "rebuff_guardrail",
+        "action": "evaluate_jailbreak"
+      }
+    },
+    {
+      "id": "ctrl_toxicity_checker",
+      "type": "metric_evaluator",
+      "name": "Toxicity & Harassment Moderation",
+      "category": "guardrails",
+      "subcategory": "content_moderation",
+      "description": "Calculates multi-dimensional toxicity scores using RoBERTa and Detoxify models.",
+      "ioValidation": {
+        "allowedInputs": ["prompt_object", "raw_text", "sanitized_prompt_object"],
+        "allowedOutputs": ["scored_payload"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_text", "label": "Input Text", "type": "raw_text" }],
+        "outputs": [{ "id": "out_scored", "label": "Scored Context", "type": "scored_payload" }]
+      },
+      "uiForm": {
+        "layout": "accordion",
+        "fields": [
+          {
+            "name": "toxicity_threshold",
+            "label": "General Toxicity Threshold",
+            "type": "slider",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "defaultValue": 0.75,
+            "helperText": "Scores above this threshold will flag the context."
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "detoxify_onnx",
+        "action": "append_metadata"
+      }
+    },
+    {
+      "id": "ctrl_decision_gate",
+      "type": "dynamic_router",
+      "name": "Conditional Decision Gate",
+      "category": "routing",
+      "subcategory": "logic_gates",
+      "description": "Evaluates contextual metadata against rule conditions and branches execution paths dynamically.",
+      "ioValidation": {
+        "allowedInputs": ["scored_payload", "redaction_metadata", "generic_context", "sanitized_prompt_object"],
+        "allowedOutputs": ["prompt_object", "halt_signal", "alert_signal", "sanitized_prompt_object"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_eval", "label": "Evaluated Data", "type": "scored_payload" }],
+        "dynamicOutputs": true
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "routing_rules",
+            "label": "Routing Conditions",
+            "type": "dynamic_rule_builder",
+            "defaultValue": [
+              {
+                "portIdentifier": "port_critical",
+                "portLabel": "Critical Violation (> 0.90)",
+                "outputType": "alert_signal"
+              },
+              {
+                "portIdentifier": "port_pass",
+                "portLabel": "Clean / Allowed (<= 0.90)",
+                "outputType": "sanitized_prompt_object"
+              }
+            ]
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "json_logic_evaluator",
+        "action": "branch_flow"
+      }
+    },
+    {
+      "id": "ctrl_model_fallback_router",
+      "type": "llm_router",
+      "name": "LLM Fallback & Load Balancer",
+      "category": "routing",
+      "subcategory": "model_routing",
+      "description": "Dynamically routes requests between primary (e.g. GPT-4o) and backup models based on latency and errors.",
+      "ioValidation": {
+        "allowedInputs": ["sanitized_prompt_object", "prompt_object"],
+        "allowedOutputs": ["sanitized_prompt_object"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_req", "label": "Sanitized Request", "type": "sanitized_prompt_object" }],
+        "outputs": [{ "id": "out_route", "label": "Routed Request", "type": "sanitized_prompt_object" }]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "primary_model",
+            "label": "Primary Model Provider",
+            "type": "dropdown",
+            "options": [
+              { "label": "OpenAI GPT-4o", "value": "gpt-4o" },
+              { "label": "Claude 3.5 Sonnet", "value": "claude-3-5" }
+            ],
+            "defaultValue": "gpt-4o"
+          },
+          {
+            "name": "fallback_model",
+            "label": "Fallback Model",
+            "type": "dropdown",
+            "options": [
+              { "label": "GPT-4o-mini (Fast SLM)", "value": "gpt-4o-mini" },
+              { "label": "Gemini 1.5 Flash", "value": "gemini-1.5-flash" }
+            ],
+            "defaultValue": "gpt-4o-mini"
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "llm_gateway_router",
+        "action": "smart_route"
+      }
+    },
+    {
+      "id": "ctrl_opa_rbac",
+      "type": "policy_enforcer",
+      "name": "OPA / Cedar Tool Authorization",
+      "category": "policy",
+      "subcategory": "access_control",
+      "description": "Filters unauthorized tool/MCP manifests before the prompt hits the model.",
+      "ioValidation": {
+        "allowedInputs": ["prompt_object", "tool_manifest", "sanitized_prompt_object"],
+        "allowedOutputs": ["filtered_tool_manifest", "sanitized_prompt_object"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_tools", "label": "Full Tool Manifest", "type": "tool_manifest" }],
+        "outputs": [{ "id": "out_filtered", "label": "Sanitized Manifest", "type": "filtered_tool_manifest" }]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "policy_engine",
+            "label": "Engine Type",
+            "type": "dropdown",
+            "options": [
+              { "label": "Open Policy Agent (Rego)", "value": "OPA" },
+              { "label": "AWS Cedar", "value": "CEDAR" }
+            ],
+            "defaultValue": "OPA"
+          },
+          {
+            "name": "rego_policy_code",
+            "label": "Rego Policy Definition",
+            "type": "code_editor",
+            "language": "rego",
+            "helperText": "Write declarative Open Policy Agent rules to authorize tool execution & user permissions.",
+            "defaultValue": "package agent.governance\n\ndefault allow = false\n\n# Rule 1: Allow low-risk tools for authenticated executors\nallow {\n    input.tool.risk_score < 0.8\n    input.user.role == \"agent_executor\"\n}\n\n# Rule 2: Require security approval for high-risk actions\nallow {\n    input.tool.risk_score >= 0.8\n    input.user.security_cleared == true\n}"
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "opa_wasm",
+        "action": "filter_manifest"
+      }
+    },
+    {
+      "id": "ctrl_rate_limiter",
+      "type": "policy_enforcer",
+      "name": "Token Rate & Cost Limiter",
+      "category": "policy",
+      "subcategory": "compliance_audit",
+      "description": "Enforces user-level token quotas, sliding-window rate limits, and financial expenditure caps.",
+      "ioValidation": {
+        "allowedInputs": ["prompt_object", "sanitized_prompt_object", "raw_text"],
+        "allowedOutputs": ["sanitized_prompt_object", "halt_signal"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_req", "label": "Prompt In", "type": "prompt_object" }],
+        "outputs": [
+          { "id": "out_pass", "label": "Quota Approved", "type": "sanitized_prompt_object" },
+          { "id": "out_exceeded", "label": "Quota Exceeded", "type": "halt_signal" }
+        ]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "max_tokens_per_min",
+            "label": "Max Tokens / Minute",
+            "type": "number_input",
+            "defaultValue": 100000
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "redis_sliding_window",
+        "action": "enforce_quota"
+      }
+    },
+    {
+      "id": "ctrl_semantic_cache",
+      "type": "cache_evaluator",
+      "name": "Semantic Cache Router",
+      "category": "optimization",
+      "subcategory": "caching",
+      "description": "Intercepts prompts and returns vector-indexed responses if similarity threshold > 0.95.",
+      "ioValidation": {
+        "allowedInputs": ["prompt_object", "sanitized_prompt_object"],
+        "allowedOutputs": ["cache_hit_payload", "prompt_object", "sanitized_prompt_object"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_prompt", "label": "Incoming Prompt", "type": "sanitized_prompt_object" }],
+        "outputs": [
+          { "id": "out_hit", "label": "Cache Hit Return", "type": "cache_hit_payload" },
+          { "id": "out_miss", "label": "Cache Miss Pass", "type": "sanitized_prompt_object" }
+        ]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "similarity_threshold",
+            "label": "Vector Cosine Similarity Threshold",
+            "type": "slider",
+            "min": 0.8,
+            "max": 0.99,
+            "step": 0.01,
+            "defaultValue": 0.95
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "qdrant_redis_cache",
+        "action": "intercept_or_pass"
+      }
+    },
+    {
+      "id": "ctrl_sandbox_exec",
+      "type": "sandbox_router",
+      "name": "Ephemeral Tool Sandbox",
+      "category": "sandboxing",
+      "subcategory": "microvm",
+      "description": "Routes untrusted code execution tools to Firecracker Micro-VM or WASI runtimes.",
+      "ioValidation": {
+        "allowedInputs": ["tool_payload", "sanitized_prompt_object"],
+        "allowedOutputs": ["sandbox_result"]
+      },
+      "ports": {
+        "inputs": [{ "id": "in_code", "label": "Code Execution Request", "type": "tool_payload" }],
+        "outputs": [{ "id": "out_res", "label": "Execution Result", "type": "sandbox_result" }]
+      },
+      "uiForm": {
+        "layout": "vertical",
+        "fields": [
+          {
+            "name": "runtime_env",
+            "label": "Sandbox Technology",
+            "type": "dropdown",
+            "options": [
+              { "label": "Firecracker Micro-VM", "value": "firecracker" },
+              { "label": "Wasmtime WASI", "value": "wasm" }
+            ],
+            "defaultValue": "firecracker"
+          }
+        ]
+      },
+      "runtimeConfig": {
+        "engine": "firecracker_api",
+        "action": "ephemeral_exec"
+      }
+    }
+  ]
+}

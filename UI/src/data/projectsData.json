@@ -1,0 +1,41 @@
+[
+  {
+    "id": "proj_fintech_ops",
+    "name": "Global FinTech Operations Workspace",
+    "description": "Production gateway & governance pipeline for core banking automation.",
+    "status": "published",
+    "environment": "PROD",
+    "agents": [
+      {
+        "id": "agt_supp_t1",
+        "name": "Support Automation Tier-1",
+        "model": "gpt-4o-mini",
+        "status": "active",
+        "hasPipeline": true
+      },
+      {
+        "id": "agt_wealth_adv",
+        "name": "Wealth Advisor Assistant",
+        "model": "claude-3-5-sonnet",
+        "status": "active",
+        "hasPipeline": true
+      }
+    ]
+  },
+  {
+    "id": "proj_insurance_sandbox",
+    "name": "Insurance Claims Automated Processing",
+    "description": "Staging environment testing LLM Lingua context compression & presidio PII masking.",
+    "status": "pre-published",
+    "environment": "STAGING",
+    "agents": [
+      {
+        "id": "agt_claims_eval",
+        "name": "Automated Claims Evaluator",
+        "model": "gpt-4o",
+        "status": "draft",
+        "hasPipeline": false
+      }
+    ]
+  }
+]
