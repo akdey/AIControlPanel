@@ -35,9 +35,9 @@ export const GenericControlNode = memo(({ data, selected, id }: NodeProps) => {
   const IconComponent = CATEGORY_ICONS[control.category] || Cpu;
 
   // Ports
-  const inputs = control.ports.inputs || [];
-  const outputs = control.ports.outputs || [];
-  const dynamicOutputs = customData.dynamicPorts || [];
+  const inputs = control?.ports?.inputs || [];
+  const outputs = control?.ports?.outputs || [];
+  const dynamicOutputs = customData?.dynamicPorts || [];
   const allOutputs = [...outputs, ...dynamicOutputs];
 
   const status = customData.status || 'idle';
@@ -68,7 +68,7 @@ export const GenericControlNode = memo(({ data, selected, id }: NodeProps) => {
       }`}
     >
       {/* Header Bar */}
-      <div className="bg-slate-100 dark:bg-slate-900/90 px-3.5 py-2.5 border-b app-border flex items-center justify-between rounded-t-xl">
+      <div className="app-surface px-3.5 py-2.5 border-b app-border flex items-center justify-between rounded-t-xl">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30">
             <IconComponent className="w-4 h-4" />

@@ -1,0 +1,50 @@
+{
+  "version": "1.5.0",
+  "categories": [
+    {
+      "id": "guardrails",
+      "label": "Guardrails & Moderation",
+      "icon": "ShieldAlert",
+      "subcategories": [
+        { "id": "input_safety", "label": "PII & Secret Protection" },
+        { "id": "content_moderation", "label": "Content Moderation & Jailbreaks" }
+      ]
+    },
+    {
+      "id": "routing",
+      "label": "Traffic & Routing",
+      "icon": "GitFork",
+      "subcategories": [
+        { "id": "logic_gates", "label": "Decision Gates & Branching" },
+        { "id": "model_routing", "label": "Model Fallbacks & Load Balancing" }
+      ]
+    },
+    {
+      "id": "policy",
+      "label": "Policy & Governance",
+      "icon": "Lock",
+      "subcategories": [
+        { "id": "access_control", "label": "OPA & Tool Authorization" },
+        { "id": "compliance_audit", "label": "Token Budgeting & Audit Logs" }
+      ]
+    },
+    {
+      "id": "optimization",
+      "label": "Optimization & Caching",
+      "icon": "Zap",
+      "subcategories": [
+        { "id": "caching", "label": "Semantic Vector Cache" },
+        { "id": "context_window", "label": "Context Window Compression" }
+      ]
+    },
+    {
+      "id": "sandboxing",
+      "label": "Execution Sandbox",
+      "icon": "Box",
+      "subcategories": [
+        { "id": "microvm", "label": "Firecracker & WASI Isolation" },
+        { "id": "tool_verification", "label": "Tool Code Audit" }
+      ]
+    }
+  ]
+}

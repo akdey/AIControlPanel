@@ -5,7 +5,7 @@ export const JWT_STORAGE_KEY = 'control_plane_jwt';
 
 // Base Axios instance
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -40,9 +40,7 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // 1. Check header for refreshed JWT
     const refreshedToken =
-      response.headers['x-refreshed-token'] ||
-      response.headers['x-renewed-jwt'] ||
-      (response.headers['authorization'] && response.headers['authorization'].replace('Bearer ', ''));
+      response.headers['x-access-token']
 
     if (refreshedToken && typeof refreshedToken === 'string') {
       localStorage.setItem(JWT_STORAGE_KEY, refreshedToken);

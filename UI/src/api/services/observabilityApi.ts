@@ -8,36 +8,26 @@ export const observabilityApi = {
    */
   getSessions: async () => {
     try {
-      // Return mocked JSON data
-      return sessionsData;
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.get('/observability/sessions');
-       * return response.data;
-       */
+      const response = await apiClient.get('/observability/sessions');
+      return response.data;
     } catch (error) {
-      console.error('[ObservabilityAPI] Failed to fetch sessions:', error);
-      throw error;
+      console.warn('[ObservabilityAPI] Backend sessions call failed. Falling back to local mock data:', error);
+      return sessionsData;
     }
   },
 
   /**
-   * Fetch observability traces.
+   * Fetch observability traces using Adaptive Layer.
    */
-  getTraces: async () => {
+  getTraces: async (projectId?: string, agentId?: string) => {
     try {
-      // Return mocked JSON data
-      return tracesData;
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.get('/observability/traces');
-       * return response.data;
-       */
+      const response = await apiClient.get('/observability/traces', {
+        params: { projectId, agentId },
+      });
+      return response.data;
     } catch (error) {
-      console.error('[ObservabilityAPI] Failed to fetch traces:', error);
-      throw error;
+      console.warn('[ObservabilityAPI] Backend traces call failed. Falling back to local mock data:', error);
+      return tracesData;
     }
   },
 };

@@ -7,6 +7,8 @@ import { isValidConnection } from '../helpers/isValidConnection';
 
 const registeredControls = controlsRegistry.controls as unknown as ControlDefinition[];
 
+import { projectsApi } from '../api/services/projectsApi';
+
 interface NodeSelectorPos {
   x: number;
   y: number;
@@ -19,6 +21,11 @@ interface CanvasState {
   nodes: Node[];
   edges: Edge[];
   selectedNodeId: string | null;
+  activePipelineId: string | null;
+  activeProjectId: string | null;
+  activeAgentName: string | null;
+  isCanvasLoading: boolean;
+
   dryRunRunning: boolean;
   dryRunResults: Record<string, any> | null;
   connectionError: string | null;
@@ -35,8 +42,12 @@ interface CanvasState {
   updateNodeConfig: (nodeId: string, newConfigValues: Record<string, any>, dynamicPorts?: ControlPort[]) => void;
   deleteEdge: (edgeId: string) => void;
   addTerminalNode: (actionType: 'allow_llm' | 'block_llm', position: { x: number; y: number }, sourceConnection?: { sourceNodeId: string, sourcePortId: string }) => void;
+  deleteNode: (nodeId: string) => void;
+  runIsolationTest: (nodeId: string, samplePayload: Record<string, any>) => Promise<any>;
   clearConnectionError: () => void;
   resetGraph: () => void;
+  loadPipelineCanvas: (pipelineId: string, projectId?: string, agentName?: string) => Promise<void>;
+  savePipelineCanvas: (pipelineId?: string) => Promise<void>;
 }
 
 // Default graph: Start (System Prompt) and Stop (Allowed to LLM) start disconnected initially
@@ -111,11 +122,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   addControlNode: (control, position, sourceConnection) => {
-    const newId = `node_${control.id}_${Date.now().toString().slice(-4)}`;
+    const newId = `node_${control.id}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     
     // Extract default form values
     const defaultConfigValues: Record<string, any> = {};
-    control.uiForm.fields.forEach((f) => {
+    control?.uiForm?.fields?.forEach((f) => {
       if (f.defaultValue !== undefined) {
         defaultConfigValues[f.name] = f.defaultValue;
       }
@@ -158,11 +169,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         }
 
         const targetCenterOffset = 90; // new controlNode input handle center offset from top
-        const sourceHandleY = sourceNode.position.y + sourcePortYOffset;
+        const sourcePosY = sourceNode.position?.y ?? position.y ?? 200;
+        const sourcePosX = sourceNode.position?.x ?? position.x ?? 100;
+        const sourceHandleY = sourcePosY + sourcePortYOffset;
         const alignedTargetY = sourceHandleY - targetCenterOffset;
 
         finalPosition = {
-          x: sourceNode.position.x + deltaX,
+          x: sourcePosX + deltaX,
           y: alignedTargetY,
         };
       }
@@ -185,12 +198,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const newX = finalPosition.x;
     const baseNodes = sourceConnection
       ? get().nodes.map((node) => {
-          if (node.id !== sourceConnection.sourceNodeId && node.position.x >= newX - 80) {
+          const nodeX = node.position?.x ?? 0;
+          if (node.id !== sourceConnection.sourceNodeId && nodeX >= newX - 80) {
             return {
               ...node,
               position: {
-                ...node.position,
-                x: node.position.x + deltaX,
+                ...(node.position || { y: 200 }),
+                x: nodeX + deltaX,
               },
             };
           }
@@ -202,7 +216,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     let newEdges = get().edges;
 
     if (sourceConnection) {
-      const targetHandle = control.ports.inputs?.[0]?.id;
+      const targetHandle = control?.ports?.inputs?.[0]?.id;
       if (targetHandle) {
         const edgeColor = '#3b82f6';
         const newEdge: Edge = {
@@ -252,7 +266,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   addTerminalNode: (actionType, position, sourceConnection) => {
     const isAllow = actionType === 'allow_llm';
-    const newId = `node_term_${isAllow ? 'allow' : 'block'}_${Date.now().toString().slice(-4)}`;
+    const newId = `node_term_${isAllow ? 'allow' : 'block'}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     let finalPosition = { ...position };
 
     if (sourceConnection) {
@@ -261,9 +275,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const deltaX = 380;
         const sourceCenterOffset = sourceNode.type === 'prompt' ? 62 : sourceNode.type === 'terminal' ? 68 : 90;
         const targetCenterOffset = 68; // TerminalNode handle center offset
-        const sourceHandleY = sourceNode.position.y + sourceCenterOffset;
+        const sourcePosY = sourceNode.position?.y ?? position.y ?? 200;
+        const sourcePosX = sourceNode.position?.x ?? position.x ?? 100;
+        const sourceHandleY = sourcePosY + sourceCenterOffset;
         finalPosition = {
-          x: sourceNode.position.x + deltaX,
+          x: sourcePosX + deltaX,
           y: sourceHandleY - targetCenterOffset,
         };
       }
@@ -355,7 +371,65 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     return result;
   },
 
+  activePipelineId: null,
+  activeProjectId: null,
+  activeAgentName: null,
+  isCanvasLoading: false,
+
   clearConnectionError: () => set({ connectionError: null }),
 
   resetGraph: () => set({ nodes: initialNodes, edges: initialEdges, nodeSelectorPos: null }),
+
+  loadPipelineCanvas: async (pipelineId: string, projectId?: string, agentName?: string) => {
+    set({
+      isCanvasLoading: true,
+      activePipelineId: pipelineId,
+      activeProjectId: projectId || null,
+      activeAgentName: agentName || null,
+    });
+    try {
+      const data = await projectsApi.getCanvas(pipelineId);
+      if (data && data.canvas_json && Array.isArray(data.canvas_json.nodes) && data.canvas_json.nodes.length > 0) {
+        const sanitizedNodes = data.canvas_json.nodes.map((node: any, idx: number) => ({
+          ...node,
+          position: (node && node.position && typeof node.position.x === 'number' && typeof node.position.y === 'number')
+            ? node.position
+            : { x: 50 + idx * 320, y: 200 },
+        }));
+        set({
+          nodes: sanitizedNodes,
+          edges: data.canvas_json.edges || [],
+          activeProjectId: data.project_id || projectId || null,
+          activeAgentName: agentName || data.name || null,
+          isCanvasLoading: false,
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn(`[CanvasStore] No saved canvas found for pipeline '${pipelineId}'. Loading default initial canvas:`, err);
+    }
+    set({
+      nodes: initialNodes,
+      edges: initialEdges,
+      activePipelineId: pipelineId,
+      activeProjectId: projectId || null,
+      activeAgentName: agentName || null,
+      isCanvasLoading: false,
+    });
+  },
+
+  savePipelineCanvas: async (pipelineId?: string) => {
+    const targetPipelineId = pipelineId || get().activePipelineId || 'pipe_001';
+    const targetProjectId = get().activeProjectId || 'proj_default';
+    const targetAgentName = get().activeAgentName || 'Control Pipeline DAG';
+    const { nodes, edges } = get();
+
+    await projectsApi.saveAgentPipeline(
+      targetPipelineId,
+      nodes,
+      edges,
+      targetProjectId,
+      `${targetAgentName} Pipeline`
+    );
+  },
 }));

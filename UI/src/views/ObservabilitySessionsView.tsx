@@ -87,11 +87,11 @@ const TraceTreeNode: React.FC<{ node: TraceNode; level?: number }> = ({ node, le
   return (
     <div className="w-full mb-3">
       {/* Node Card */}
-      <div className={`border dark:border-[#27272a] rounded-lg bg-white dark:bg-zinc-900/50 shadow-sm transition-colors ${isExpanded ? 'border-blue-500/30' : 'hover:border-blue-500/50'}`}>
+      <div className={`border app-border rounded-lg app-card shadow-sm transition-colors ${isExpanded ? 'border-blue-500/30' : 'hover:border-blue-500/50'}`}>
         
         {/* Header / Toggle Row */}
         <div 
-          className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-2 p-3 ${isExpanded ? 'border-b dark:border-[#27272a] bg-slate-50/50 dark:bg-black/20 rounded-t-lg' : ''} ${hasChildren ? 'cursor-pointer' : ''}`}
+          className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-2 p-3 ${isExpanded ? 'border-b app-border app-surface rounded-t-lg' : ''} ${hasChildren ? 'cursor-pointer' : ''}`}
           onClick={() => hasChildren && setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ const TraceTreeNode: React.FC<{ node: TraceNode; level?: number }> = ({ node, le
               {hasChildren ? (
                 isExpanded ? <ChevronDown className="w-4 h-4 app-text-muted" /> : <ChevronRight className="w-4 h-4 app-text-muted" />
               ) : (
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--border-subtle)]" />
               )}
             </div>
 
@@ -122,13 +122,13 @@ const TraceTreeNode: React.FC<{ node: TraceNode; level?: number }> = ({ node, le
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <span className="text-[10px] font-mono font-bold app-text-muted uppercase">Input Payload</span>
-                <div className="bg-slate-50 dark:bg-black/40 p-2.5 rounded border dark:border-zinc-800 text-[10px] font-mono overflow-x-auto text-emerald-600 dark:text-emerald-400 max-h-40">
+                <div className="app-surface p-2.5 rounded border app-border text-[10px] font-mono overflow-x-auto text-emerald-600 dark:text-emerald-400 max-h-40">
                   <pre>{JSON.stringify(node.input, null, 2)}</pre>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <span className="text-[10px] font-mono font-bold app-text-muted uppercase">Output Result</span>
-                <div className="bg-slate-50 dark:bg-black/40 p-2.5 rounded border dark:border-zinc-800 text-[10px] font-mono overflow-x-auto text-blue-600 dark:text-blue-400 max-h-40">
+                <div className="app-surface p-2.5 rounded border app-border text-[10px] font-mono overflow-x-auto text-blue-600 dark:text-blue-400 max-h-40">
                   <pre>{JSON.stringify(node.output, null, 2)}</pre>
                 </div>
               </div>
@@ -139,7 +139,7 @@ const TraceTreeNode: React.FC<{ node: TraceNode; level?: number }> = ({ node, le
 
       {/* Children Container */}
       {hasChildren && isExpanded && (
-        <div className="ml-5 mt-3 pl-4 border-l-2 border-slate-200 dark:border-zinc-800">
+        <div className="ml-5 mt-3 pl-4 border-l-2 app-border">
           {node.children.map(child => (
             <TraceTreeNode key={child.id} node={child} level={level + 1} />
           ))}
@@ -256,7 +256,7 @@ export const ObservabilitySessionsView: React.FC = () => {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col md:flex-row md:items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border app-border">
+      <div className="flex flex-col md:flex-row md:items-center gap-3 app-surface p-3 rounded-lg border app-border">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 app-text-muted" />
           <input 
@@ -279,7 +279,7 @@ export const ObservabilitySessionsView: React.FC = () => {
               {uniqueVms.map(vm => <option key={vm} value={vm}>{vm}</option>)}
             </select>
           </div>
-          <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+          <div className="w-px h-5 bg-[var(--border-card)] hidden md:block"></div>
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 app-text-muted" />
             <select 
@@ -291,7 +291,7 @@ export const ObservabilitySessionsView: React.FC = () => {
               {uniqueApps.map(app => <option key={app} value={app}>{app}</option>)}
             </select>
           </div>
-          <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+          <div className="w-px h-5 bg-[var(--border-card)] hidden md:block"></div>
           <div className="flex items-center gap-2">
             <Bot className="w-4 h-4 app-text-muted" />
             <select 
@@ -331,7 +331,7 @@ export const ObservabilitySessionsView: React.FC = () => {
                   <tr 
                     key={session.id} 
                     onClick={() => setSelectedSessionId(session.id)}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
+                    className="hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer group"
                   >
                     <td className="px-4 py-4">
                       <div className="font-bold text-blue-500 group-hover:underline">
@@ -394,9 +394,9 @@ export const ObservabilitySessionsView: React.FC = () => {
           />
           
           {/* Drawer */}
-          <div className="fixed top-0 right-0 h-full w-full max-w-4xl bg-white dark:bg-[#18181b] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out border-l dark:border-[#27272a] overflow-hidden">
+          <div className="fixed top-0 right-0 h-full w-full max-w-4xl app-card shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out border-l app-border overflow-hidden">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between p-5 border-b dark:border-[#27272a] bg-slate-50 dark:bg-zinc-900/50">
+            <div className="flex items-center justify-between p-5 border-b app-border app-surface">
               <div>
                 <h2 className="text-lg font-extrabold flex items-center gap-2">
                   <AlignLeft className="w-5 h-5 text-blue-500" /> Traceability Explorer
@@ -407,7 +407,7 @@ export const ObservabilitySessionsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setSelectedSessionId(null)}
-                className="p-2 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                className="p-2 hover:bg-[var(--bg-card-hover)] rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -418,23 +418,23 @@ export const ObservabilitySessionsView: React.FC = () => {
               
               {/* Session Overview Card */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="app-surface border dark:border-[#27272a] p-3 rounded-lg text-center space-y-1">
+                <div className="app-surface border app-border p-3 rounded-lg text-center space-y-1">
                   <span className="text-[10px] font-mono app-text-muted uppercase block font-semibold">Total Traces</span>
                   <span className="text-lg font-extrabold">{selectedSession.metrics?.totalTraces || 0}</span>
                 </div>
-                <div className="app-surface border dark:border-[#27272a] p-3 rounded-lg text-center space-y-1">
+                <div className="app-surface border app-border p-3 rounded-lg text-center space-y-1">
                   <span className="text-[10px] font-mono app-text-muted uppercase block font-semibold">Avg Latency</span>
                   <span className="text-lg font-extrabold flex items-center justify-center gap-1">
                     <Clock className="w-3 h-3 text-amber-500"/> {selectedSession.metrics?.averageLatency || 0}s
                   </span>
                 </div>
-                <div className="app-surface border dark:border-[#27272a] p-3 rounded-lg text-center space-y-1">
+                <div className="app-surface border app-border p-3 rounded-lg text-center space-y-1">
                   <span className="text-[10px] font-mono app-text-muted uppercase block font-semibold">Cost</span>
                   <span className="text-lg font-extrabold flex items-center justify-center gap-1">
                     <DollarSign className="w-3 h-3 text-emerald-500"/> {(selectedSession.metrics?.totalCost || 0).toFixed(4)}
                   </span>
                 </div>
-                <div className="app-surface border dark:border-[#27272a] p-3 rounded-lg text-center space-y-1">
+                <div className="app-surface border app-border p-3 rounded-lg text-center space-y-1">
                   <span className="text-[10px] font-mono app-text-muted uppercase block font-semibold">Tokens</span>
                   <span className="text-lg font-extrabold flex items-center justify-center gap-1">
                     <Cpu className="w-3 h-3 text-blue-500"/> {selectedSession.metrics?.totalTokens || 0}
@@ -444,7 +444,7 @@ export const ObservabilitySessionsView: React.FC = () => {
 
               {/* Traces Tree */}
               <div className="space-y-4 pt-2">
-                <h3 className="text-sm font-bold border-b dark:border-[#27272a] pb-2">Hierarchical Trace Execution</h3>
+                <h3 className="text-sm font-bold border-b app-border pb-2">Hierarchical Trace Execution</h3>
                 
                 {sessionTraceRoots.length === 0 ? (
                   <p className="text-xs app-text-muted text-center py-8">No traces found for this session.</p>

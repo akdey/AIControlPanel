@@ -1,5 +1,4 @@
 import { apiClient } from '../apiClient';
-import projectsData from '../../data/projectsData.json';
 
 export interface CreateProjectPayload {
   name: string;
@@ -11,96 +10,75 @@ export interface CreateAgentPayload {
   projectId: string;
   name: string;
   model: string;
+  role?: string;
+}
+
+export interface InvokePipelinePayload {
+  promptObj?: Record<string, any>;
+  prompt?: string;
+  tool_manifest?: any[];
+  agentId?: string;
 }
 
 export const projectsApi = {
   /**
-   * Fetch all projects and attached agents.
+   * Fetch all project workspaces and attached agents from backend database.
    */
   getProjects: async () => {
-    try {
-      // Return mocked JSON data inside try block
-      return projectsData;
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.get('/projects');
-       * return response.data;
-       */
-    } catch (error) {
-      console.error('[ProjectsAPI] Failed to fetch projects:', error);
-      throw error;
-    }
+    const response = await apiClient.get('/projects');
+    return response.data;
   },
 
   /**
-   * Create new project workspace.
+   * Create new project workspace in backend database.
    */
   createProject: async (payload: CreateProjectPayload) => {
-    try {
-      // Return mocked payload execution inside try block
-      return {
-        id: `proj_${Date.now().toString().slice(-4)}`,
-        ...payload,
-        status: 'pre-published',
-        agents: [],
-      };
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.post('/projects', payload);
-       * return response.data;
-       */
-    } catch (error) {
-      console.error('[ProjectsAPI] Failed to create project:', error);
-      throw error;
-    }
+    const response = await apiClient.post('/projects', payload);
+    return response.data;
   },
 
   /**
-   * Create new agent inside project workspace.
+   * Create new agent inside project workspace in backend database.
    */
   createAgent: async (payload: CreateAgentPayload) => {
-    try {
-      // Return mocked payload execution inside try block
-      return {
-        id: `agt_${Date.now().toString().slice(-4)}`,
-        name: payload.name,
-        model: payload.model,
-        status: 'draft',
-        hasPipeline: false,
-      };
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.post(`/projects/${payload.projectId}/agents`, payload);
-       * return response.data;
-       */
-    } catch (error) {
-      console.error('[ProjectsAPI] Failed to create agent:', error);
-      throw error;
-    }
+    const response = await apiClient.post('/projects/agents', payload);
+    return response.data;
   },
 
   /**
-   * Save agent DAG pipeline topology.
+   * Save agent DAG pipeline topology canvas_json in backend database.
    */
-  saveAgentPipeline: async (agentId: string, pipelineNodes: unknown[], pipelineEdges: unknown[]) => {
-    try {
-      // Return mocked save confirmation inside try block
-      return { success: true, agentId, updatedNodes: pipelineNodes.length };
+  saveAgentPipeline: async (
+    agentId: string,
+    pipelineNodes: unknown[],
+    pipelineEdges: unknown[],
+    projectId?: string,
+    name?: string
+  ) => {
+    const response = await apiClient.post('/canvas/save', {
+      pipeline_id: agentId,
+      project_id: projectId || 'proj_default',
+      agent_id: agentId,
+      name: name || 'Control Pipeline DAG',
+      nodes: pipelineNodes,
+      edges: pipelineEdges,
+    });
+    return response.data;
+  },
 
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.put(`/agents/${agentId}/pipeline`, {
-       *   nodes: pipelineNodes,
-       *   edges: pipelineEdges,
-       * });
-       * return response.data;
-       */
-    } catch (error) {
-      console.error('[ProjectsAPI] Failed to save agent pipeline DAG:', error);
-      throw error;
-    }
+  /**
+   * Get saved canvas_json DAG by pipeline ID from backend database.
+   */
+  getCanvas: async (pipelineId: string) => {
+    const response = await apiClient.get(`/canvas/${pipelineId}`);
+    return response.data;
+  },
+
+  /**
+   * Execute pipeline DAG through Graph Execution Engine endpoint.
+   */
+  invokePipeline: async (pipelineId: string, payload: InvokePipelinePayload) => {
+    const response = await apiClient.post(`/pipeline/invoke/${pipelineId}`, payload);
+    return response.data;
   },
 };

@@ -1,0 +1,48 @@
+{
+  "id": "ctrl_toxicity_checker",
+  "type": "metric_evaluator",
+  "name": "Toxicity Moderation",
+  "category": "guardrails",
+  "subcategory": "content_moderation",
+  "description": "Calculates multi-dimensional toxicity scores using RoBERTa models.",
+  "ioValidation": {
+    "allowedInputs": ["prompt_object", "raw_text"],
+    "allowedOutputs": ["scored_payload"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_text", "label": "Input Text", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_pass", "label": "Safe Context", "type": "sanitized_prompt_object" },
+      { "id": "out_toxic", "label": "Toxicity Flag", "type": "taint_flag" }
+    ]
+  },
+  "uiForm": {
+    "layout": "accordion",
+    "fields": [
+      {
+        "name": "threshold",
+        "label": "General Toxicity Threshold",
+        "type": "slider",
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01,
+        "defaultValue": 0.75,
+        "helperText": "Scores above this threshold will flag the context."
+      },
+      {
+        "name": "subcategories",
+        "label": "Sub-Category Thresholds",
+        "type": "group",
+        "fields": [
+          { "name": "severe_toxicity", "label": "Severe Toxicity", "type": "slider", "min": 0, "max": 1, "step": 0.05, "defaultValue": 0.5 },
+          { "name": "threat", "label": "Threat / Violence", "type": "slider", "min": 0, "max": 1, "step": 0.05, "defaultValue": 0.4 },
+          { "name": "insult", "label": "Insults / Profanity", "type": "slider", "min": 0, "max": 1, "step": 0.05, "defaultValue": 0.8 }
+        ]
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "detoxify",
+    "action": "append_metadata"
+  }
+}

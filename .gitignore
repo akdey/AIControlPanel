@@ -1,11 +1,27 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+__pycache__/
+*.pyc
+.venv/
+venv/
 
 # Build outputs
 dist/
 build/
 *.log
+logs/
+API/logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+control_plane.db
+app.db
+
+# Test & Cache
+.pytest_cache/
 
 # Environment & Config files
 .env

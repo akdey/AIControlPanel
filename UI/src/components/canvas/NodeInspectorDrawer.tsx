@@ -84,12 +84,12 @@ export const NodeInspectorDrawer: React.FC = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-lg">
+        <div className="flex app-surface p-1 rounded-lg border app-border">
           <button
             onClick={() => setActiveTab('config')}
             className={`flex-1 py-1.5 text-[11px] font-semibold flex items-center justify-center gap-1.5 rounded-md transition-all ${
               activeTab === 'config'
-                ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm border app-border'
+                ? 'app-card text-cyan-600 dark:text-cyan-400 shadow-sm border app-border'
                 : 'border border-transparent app-text-muted hover:app-text-main'
             }`}
           >
@@ -99,7 +99,7 @@ export const NodeInspectorDrawer: React.FC = () => {
             onClick={() => setActiveTab('dryrun')}
             className={`flex-1 py-1.5 text-[11px] font-semibold flex items-center justify-center gap-1.5 rounded-md transition-all ${
               activeTab === 'dryrun'
-                ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm border app-border'
+                ? 'app-card text-cyan-600 dark:text-cyan-400 shadow-sm border app-border'
                 : 'border border-transparent app-text-muted hover:app-text-main'
             }`}
           >

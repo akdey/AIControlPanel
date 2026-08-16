@@ -1,0 +1,52 @@
+{
+  "id": "ctrl_opa_rbac",
+  "type": "policy_enforcer",
+  "name": "OPA / Cedar Tool Authorization",
+  "category": "policy",
+  "subcategory": "access_control",
+  "description": "Filters unauthorized tool/MCP manifests before the prompt hits the model.",
+  "ioValidation": {
+    "allowedInputs": ["prompt_object", "tool_manifest"],
+    "allowedOutputs": ["filtered_tool_manifest"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_tools", "label": "Full Tool Manifest", "type": "tool_manifest" }],
+    "outputs": [{ "id": "out_filtered", "label": "Sanitized Manifest", "type": "filtered_tool_manifest" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "policy_engine",
+        "label": "Engine Type",
+        "type": "dropdown",
+        "options": [
+          { "label": "Open Policy Agent (Rego)", "value": "OPA" },
+          { "label": "AWS Cedar", "value": "CEDAR" }
+        ],
+        "defaultValue": "OPA"
+      },
+      {
+        "name": "policy_code",
+        "label": "Policy Definition",
+        "type": "code_editor",
+        "language": "rego",
+        "defaultValue": "package agent.authz\n\ndefault allow = false\n\nallow {\n    input.action == \"tool:invoke\"\n    input.role == \"support_tier_1\"\n    not input.tool in [\"database_drop\", \"shell_exec\"]\n}"
+      },
+      {
+        "name": "unauthorized_action",
+        "label": "Unauthorized Tool Handling",
+        "type": "dropdown",
+        "options": [
+          { "label": "Invisible (Strip from LLM manifest)", "value": "strip_silently" },
+          { "label": "Throw 403 Forbidden Error", "value": "fail_closed" }
+        ],
+        "defaultValue": "strip_silently"
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "opa_wasm",
+    "action": "filter_manifest"
+  }
+}

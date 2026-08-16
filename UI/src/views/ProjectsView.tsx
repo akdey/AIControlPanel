@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import projectsData from '../data/projectsData.json';
+import React, { useState, useMemo, useEffect } from 'react';
+import { projectsApi } from '../api/services/projectsApi';
 import { 
   FolderKanban, 
   Bot, 
@@ -37,7 +37,26 @@ interface AgentItem {
 }
 
 export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
-  const [projects, setProjects] = useState<ProjectItem[]>(projectsData as ProjectItem[]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProjects = async () => {
+    try {
+      setIsLoading(true);
+      const data = await projectsApi.getProjects();
+      if (Array.isArray(data)) {
+        setProjects(data as unknown as ProjectItem[]);
+      }
+    } catch (err) {
+      console.error('[ProjectsView] Failed to fetch projects from API:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
   
   // High-level navigation state
   const [activeFlowStep, setActiveFlowStep] = useState<null | 'create_project' | 'open_canvas'>(null);
@@ -60,49 +79,52 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
   // Forms
   const [newProjName, setNewProjName] = useState('');
   const [newProjDesc, setNewProjDesc] = useState('');
-  const [newProjEnv, setNewProjEnv] = useState('DEV');
+  const [newProjEnv, setNewProjEnv] = useState('staging');
 
   const [newAgentName, setNewAgentName] = useState('');
   const [newAgentModel, setNewAgentModel] = useState('gpt-4o-mini');
 
-  const handleCreateProjectSubmit = (e: React.FormEvent) => {
+  const handleCreateProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProjName.trim()) return;
 
-    const createdProj: ProjectItem = {
-      id: `proj_${Date.now().toString().slice(-4)}`,
-      name: newProjName,
-      description: newProjDesc || 'Custom enterprise workspace boundary.',
-      status: 'pre-published',
-      environment: newProjEnv,
-      agents: [],
-    };
+    try {
+      await projectsApi.createProject({
+        name: newProjName,
+        description: newProjDesc || 'Custom enterprise workspace boundary.',
+        environment: newProjEnv,
+      });
+      await fetchProjects();
+    } catch (err) {
+      console.error('[ProjectsView] Failed to create project:', err);
+    }
 
-    setProjects((prev) => [createdProj, ...prev]);
-    setSelectedProject(createdProj);
     setNewProjName('');
     setNewProjDesc('');
     setActiveFlowStep(null);
   };
 
-  const handleCreateAgentSubmit = (e: React.FormEvent) => {
+  const handleCreateAgentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAgentName.trim() || !selectedProject) return;
 
-    const createdAgent: AgentItem = {
-      id: `agt_${Date.now().toString().slice(-4)}`,
-      name: newAgentName,
-      model: newAgentModel,
-      status: 'draft',
-      hasPipeline: false,
-    };
-
-    setProjects((prev) =>
-      prev.map((p) => (p.id === selectedProject.id ? { ...p, agents: [...p.agents, createdAgent] } : p))
-    );
-    
-    // Update local selected project so UI refreshes immediately
-    setSelectedProject((prev) => prev ? { ...prev, agents: [...prev.agents, createdAgent] } : null);
+    try {
+      await projectsApi.createAgent({
+        projectId: selectedProject.id,
+        name: newAgentName,
+        model: newAgentModel,
+      });
+      await fetchProjects();
+      
+      // Update selected project view with latest project data
+      const updatedList = await projectsApi.getProjects();
+      const match = updatedList.find((p: any) => p.id === selectedProject.id);
+      if (match) {
+        setSelectedProject(match);
+      }
+    } catch (err) {
+      console.error('[ProjectsView] Failed to create agent:', err);
+    }
 
     setNewAgentName('');
     setIsCreateAgentOpen(false);
@@ -167,7 +189,11 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
           </button>
         </div>
         <div className="flex-1 h-full w-full relative overflow-hidden">
-          <PipelineStudioView />
+          <PipelineStudioView
+            agentId={agentForCanvas?.id}
+            agentName={agentForCanvas?.name}
+            projectId={selectedProject?.id}
+          />
         </div>
       </div>
     );
@@ -192,7 +218,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSelectedProject(null)}
-              className="p-1.5 app-surface border rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 app-surface border rounded hover:bg-[var(--bg-card-hover)] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -323,10 +349,10 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
                   </tr>
                 ) : (
                   filteredAgents.map(agt => (
-                    <tr key={agt.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={agt.id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
                       <td className="px-4 py-3 font-medium">{agt.name}</td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                        <span className="font-mono text-[11px] app-surface px-2 py-1 rounded border app-border">
                           {agt.model}
                         </span>
                       </td>
@@ -463,7 +489,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
       )}
 
       {/* Projects Filters Bar */}
-      <div className="flex flex-col md:flex-row md:items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border app-border">
+      <div className="flex flex-col md:flex-row md:items-center gap-3 app-surface p-3 rounded-lg border app-border">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 app-text-muted" />
           <input 
@@ -488,7 +514,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
               <option value="DEV">DEV</option>
             </select>
           </div>
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+          <div className="w-px h-6 bg-[var(--border-card)]"></div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold app-text-muted">Sort:</span>
             <select 
@@ -541,7 +567,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ filterMode }) => {
                       </span>
                     </div>
                   </div>
-                  <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <button className="app-text-muted hover:app-text-main">
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>

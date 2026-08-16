@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_prompt_injection",
+  "name": "Prompt Injection Guardrail",
+  "category": "guardrail",
+  "subcategory": "content_moderation",
+  "version": "1.0.0",
+  "description": "Detects system prompt override attacks, jailbreaks, and injection attempts.",
+  "author": "AI Security Labs",
+  "ports": {
+    "inputs": [
+      { "id": "in_prompt", "label": "Prompt Input", "type": "prompt_object" }
+    ],
+    "outputs": [
+      { "id": "out_pass", "label": "Clean Output", "type": "sanitized_prompt_object" },
+      { "id": "out_injection", "label": "Injection Flag", "type": "taint_flag" }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "prompt_injection",
+    "timeoutMs": 250,
+    "fallbackAction": "block"
+  },
+  "configValues": {
+    "strict_mode": true
+  }
+}

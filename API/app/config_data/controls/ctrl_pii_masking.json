@@ -1,0 +1,58 @@
+{
+  "id": "ctrl_pii_masking",
+  "type": "guardrail_evaluator",
+  "name": "PII Masking & Redaction",
+  "category": "guardrails",
+  "subcategory": "input_safety",
+  "description": "Scans context for sensitive entities using Microsoft Presidio and redacts or fakes values.",
+  "ioValidation": {
+    "allowedInputs": ["prompt_object", "raw_text", "tool_payload"],
+    "allowedOutputs": ["sanitized_prompt_object", "redaction_metadata"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_sanitized", "label": "Sanitized Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "entity_types",
+        "label": "Target PII Entities",
+        "type": "multi_select",
+        "required": true,
+        "options": [
+          { "label": "Email Address", "value": "EMAIL_ADDRESS" },
+          { "label": "Phone Number", "value": "PHONE_NUMBER" },
+          { "label": "Credit Card", "value": "CREDIT_CARD" },
+          { "label": "US SSN / National ID", "value": "GOV_ID" },
+          { "label": "IP Address", "value": "IP_ADDRESS" },
+          { "label": "Crypto Wallet", "value": "CRYPTO_ADDRESS" }
+        ],
+        "defaultValue": ["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD"]
+      },
+      {
+        "name": "masking_strategy",
+        "label": "Masking Strategy",
+        "type": "radio_group",
+        "options": [
+          { "label": "Redact with Token (<EMAIL>)", "value": "token" },
+          { "label": "Synthetic Data (Faker)", "value": "faker" },
+          { "label": "Blackout (***)", "value": "asterisk" }
+        ],
+        "defaultValue": "token"
+      },
+      {
+        "name": "custom_regex_list",
+        "label": "Custom Regex Patterns",
+        "type": "tag_input",
+        "placeholder": "Add custom regex...",
+        "defaultValue": []
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "presidio_analyzer",
+    "action": "mutate_payload"
+  }
+}

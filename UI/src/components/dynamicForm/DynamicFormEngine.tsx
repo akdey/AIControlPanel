@@ -455,6 +455,14 @@ export const DynamicFormEngine: React.FC<DynamicFormEngineProps> = ({ uiForm, va
     }
   };
 
+  if (!uiForm || !uiForm.fields || !Array.isArray(uiForm.fields)) {
+    return (
+      <div className="text-xs app-text-muted italic p-2">
+        No configurable properties available for this node.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {uiForm.fields.map((field) => (

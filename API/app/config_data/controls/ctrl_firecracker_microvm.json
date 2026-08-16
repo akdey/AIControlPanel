@@ -1,0 +1,57 @@
+{
+  "id": "ctrl_firecracker_microvm",
+  "type": "sandbox_router",
+  "name": "Ephemeral Tool Sandbox",
+  "category": "sandboxing",
+  "subcategory": "microvm",
+  "description": "Routes untrusted code execution tools to Firecracker Micro-VM or WASI runtimes.",
+  "ioValidation": {
+    "allowedInputs": ["tool_payload"],
+    "allowedOutputs": ["sandbox_result"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_code", "label": "Code Execution Request", "type": "tool_payload" }],
+    "outputs": [{ "id": "out_res", "label": "Execution Result", "type": "sandbox_result" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "runtime_env",
+        "label": "Sandbox Technology",
+        "type": "dropdown",
+        "options": [
+          { "label": "Firecracker Micro-VM (Full Isolation)", "value": "firecracker" },
+          { "label": "Wasmtime (WASI WebAssembly)", "value": "wasm" },
+          { "label": "gVisor Runsc Container", "value": "gvisor" }
+        ],
+        "defaultValue": "firecracker"
+      },
+      {
+        "name": "max_timeout_ms",
+        "label": "Max Timeout (ms)",
+        "type": "number_input",
+        "min": 100,
+        "max": 30000,
+        "defaultValue": 3000
+      },
+      {
+        "name": "network_access",
+        "label": "Network Policy",
+        "type": "toggle",
+        "defaultValue": false,
+        "helperText": "Keep disabled to prevent exfiltration."
+      },
+      {
+        "name": "read_only_rootfs",
+        "label": "Enforce Read-Only Root Filesystem",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "firecracker_api",
+    "action": "ephemeral_exec"
+  }
+}

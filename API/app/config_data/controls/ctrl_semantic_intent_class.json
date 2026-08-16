@@ -1,0 +1,59 @@
+{
+  "id": "ctrl_semantic_intent_class",
+  "type": "router",
+  "name": "Semantic Intent Classification",
+  "category": "traffic",
+  "subcategory": "intent_routing",
+  "description": "Classifies incoming prompts by intent domain (finance, code, math, general) for optimal routing.",
+  "ioValidation": {
+    "allowedInputs": [
+      "prompt_object",
+      "sanitized_prompt_object"
+    ],
+    "allowedOutputs": [
+      "sanitized_prompt_object",
+      "halt_signal"
+    ]
+  },
+  "ports": {
+    "inputs": [
+      {
+        "id": "in_req",
+        "label": "Prompt Payload",
+        "type": "prompt_object"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out_code",
+        "label": "Code Intent",
+        "type": "sanitized_prompt_object"
+      },
+      {
+        "id": "out_math",
+        "label": "Math Intent",
+        "type": "sanitized_prompt_object"
+      },
+      {
+        "id": "out_general",
+        "label": "General Intent",
+        "type": "sanitized_prompt_object"
+      }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "enabled",
+        "label": "Enable Control",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "ctrl_semantic_intent_class",
+    "action": "evaluate"
+  }
+}

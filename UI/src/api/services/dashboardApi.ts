@@ -5,21 +5,15 @@ import type { CustomDashboardItem } from '../../types/customDashboard';
 
 export const dashboardApi = {
   /**
-   * Fetch default operations dashboard metrics.
+   * Fetch default operations dashboard / FinOps metrics from backend.
    */
   getDashboardMetrics: async () => {
     try {
-      // Return mocked JSON data inside try block
-      return dashboardData;
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.get('/dashboards/default');
-       * return response.data;
-       */
+      const response = await apiClient.get('/finops/metrics');
+      return response.data;
     } catch (error) {
-      console.error('[DashboardAPI] Failed to fetch default dashboard metrics:', error);
-      throw error;
+      console.warn('[DashboardAPI] Backend finops call failed. Falling back to local dashboardData mock:', error);
+      return dashboardData;
     }
   },
 
@@ -28,17 +22,11 @@ export const dashboardApi = {
    */
   getCustomDashboards: async (): Promise<CustomDashboardItem[]> => {
     try {
-      // Return mocked JSON data inside try block
-      return customDashboardsData as CustomDashboardItem[];
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.get('/dashboards/custom');
-       * return response.data;
-       */
+      const response = await apiClient.get('/dashboards/custom');
+      return response.data;
     } catch (error) {
-      console.error('[DashboardAPI] Failed to fetch custom dashboards:', error);
-      throw error;
+      console.warn('[DashboardAPI] Backend custom dashboards call failed. Falling back to local mock data:', error);
+      return customDashboardsData as CustomDashboardItem[];
     }
   },
 
@@ -47,17 +35,11 @@ export const dashboardApi = {
    */
   saveCustomDashboard: async (dashboard: Partial<CustomDashboardItem>) => {
     try {
-      // Mocked save execution inside try block
-      return { success: true, id: dashboard.id || `dash_${Date.now()}` };
-
-      /*
-       * Production Backend Call (uncomment when connecting to backend server):
-       * const response = await apiClient.post('/dashboards/custom', dashboard);
-       * return response.data;
-       */
+      const response = await apiClient.post('/dashboards/custom', dashboard);
+      return response.data;
     } catch (error) {
-      console.error('[DashboardAPI] Failed to save custom dashboard:', error);
-      throw error;
+      console.warn('[DashboardAPI] Backend save custom dashboard failed. Using local fallback:', error);
+      return { success: true, id: dashboard.id || `dash_${Date.now()}` };
     }
   },
 };

@@ -1,0 +1,3 @@
+"""
+Observability Façade package.
+"""

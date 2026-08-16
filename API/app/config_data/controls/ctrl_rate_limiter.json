@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_rate_limiter",
+  "name": "TPM / RPM Token Budgeter",
+  "category": "policy",
+  "subcategory": "compliance_audit",
+  "version": "1.0.0",
+  "description": "Enforces per-tenant and per-agent token-per-minute and request-per-minute rate limits.",
+  "author": "FinOps & Rate Control",
+  "ports": {
+    "inputs": [
+      { "id": "in_prompt", "label": "Prompt Input", "type": "prompt_object" }
+    ],
+    "outputs": [
+      { "id": "out_pass", "label": "Within Budget", "type": "prompt_object" }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "rate_limiter",
+    "timeoutMs": 50,
+    "fallbackAction": "block"
+  },
+  "configValues": {
+    "max_tpm": 100000,
+    "max_rpm": 600
+  }
+}

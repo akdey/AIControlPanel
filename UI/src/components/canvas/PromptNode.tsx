@@ -22,7 +22,8 @@ export const PromptNode = memo(({ data, selected, id }: NodeProps) => {
     });
   };
 
-  const firstPort = nodeData.ports[0] || { id: 'out_prompt_obj', type: 'prompt_object', label: 'Prompt Payload' };
+  const ports = nodeData?.ports || [];
+  const firstPort = ports[0] || { id: 'out_prompt_obj', type: 'prompt_object', label: 'Prompt Payload' };
   const isPortConnected = edges.some(
     (e) => e.source === id && e.sourceHandle === firstPort.id
   );
@@ -94,7 +95,8 @@ PromptNode.displayName = 'PromptNode';
 export const TerminalNode = memo(({ data, selected, id }: NodeProps) => {
   const nodeData = data as unknown as TerminalNodeData;
   const isAllow = nodeData.actionType === 'allow_llm';
-  const firstPort = nodeData.ports[0] || { id: 'in_term_pass', type: 'sanitized_prompt_object', label: 'Sanitized Prompt' };
+  const ports = nodeData?.ports || [];
+  const firstPort = ports[0] || { id: 'in_term_pass', type: 'sanitized_prompt_object', label: 'Sanitized Prompt' };
 
   return (
     <div

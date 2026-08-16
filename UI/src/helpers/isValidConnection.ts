@@ -130,14 +130,15 @@ export function isValidConnection(
 
   // Find source port data type
   let sourceType: PortDataType | undefined;
-  if (sourceNode.type === 'ingestion') {
-    const data = sourceNode.data as unknown as IngestionNodeData;
-    const port = data.ports.find((p) => p.id === connection.sourceHandle);
+  if (sourceNode.type === 'ingestion' || sourceNode.type === 'prompt') {
+    const data = sourceNode.data as any;
+    const ports = data?.ports || [];
+    const port = ports.find((p: any) => p.id === connection.sourceHandle);
     sourceType = port?.type || 'prompt_object';
   } else if (sourceNode.type === 'controlNode') {
     const data = sourceNode.data as unknown as CustomNodeData;
-    const outputs = data.control.ports.outputs || [];
-    const dynamicOutputs = data.dynamicPorts || [];
+    const outputs = data?.control?.ports?.outputs || [];
+    const dynamicOutputs = data?.dynamicPorts || [];
     const port = [...outputs, ...dynamicOutputs].find((p) => p.id === connection.sourceHandle);
     sourceType = port?.type;
   }
@@ -147,8 +148,9 @@ export function isValidConnection(
   let targetNodeName = 'Target';
   if (targetNode.type === 'terminal') {
     const data = targetNode.data as unknown as TerminalNodeData;
-    targetNodeName = data.label;
-    const port = data.ports.find((p) => p.id === connection.targetHandle);
+    targetNodeName = data?.label || 'Terminal Endpoint';
+    const ports = data?.ports || [];
+    const port = ports.find((p) => p.id === connection.targetHandle);
     if (port) {
       allowedTargetInputs = [port.type];
     } else {
@@ -157,13 +159,14 @@ export function isValidConnection(
     }
   } else if (targetNode.type === 'controlNode') {
     const data = targetNode.data as unknown as CustomNodeData;
-    targetNodeName = data.control.name;
-    const port = (data.control.ports.inputs || []).find((p) => p.id === connection.targetHandle);
+    targetNodeName = data?.control?.name || 'Control Node';
+    const inputs = data?.control?.ports?.inputs || [];
+    const port = inputs.find((p) => p.id === connection.targetHandle);
     if (port) {
       allowedTargetInputs = [port.type];
     }
     // Also check control ioValidation allowedInputs
-    const ioAllowed = data.control.ioValidation.allowedInputs || [];
+    const ioAllowed = data?.control?.ioValidation?.allowedInputs || [];
     allowedTargetInputs = Array.from(new Set([...allowedTargetInputs, ...ioAllowed]));
   }
 

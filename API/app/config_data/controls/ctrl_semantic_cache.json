@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_semantic_cache",
+  "name": "Semantic Vector Cache",
+  "category": "optimization",
+  "subcategory": "caching",
+  "version": "1.0.0",
+  "description": "Caches identical or semantically similar prompts to save token latency and LLM cost.",
+  "author": "Performance Engineering",
+  "ports": {
+    "inputs": [
+      { "id": "in_prompt", "label": "Prompt Input", "type": "prompt_object" }
+    ],
+    "outputs": [
+      { "id": "out_hit", "label": "Cache Hit", "type": "completion" },
+      { "id": "out_miss", "label": "Cache Miss", "type": "prompt_object" }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "semantic_cache",
+    "timeoutMs": 80,
+    "fallbackAction": "pass"
+  },
+  "configValues": {
+    "cosine_threshold": 0.92
+  }
+}
