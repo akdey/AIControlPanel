@@ -7,7 +7,8 @@ from app.core.config import settings
 from app.core.logger_config import setup_logging
 from app.core.logging_middleware import RequestResponseLoggingMiddleware
 from app.core.database import engine, Base, SessionLocal
-from app.modules.projects.models import Project, Agent, Pipeline
+from app.modules.projects.models import Project, Agent
+from app.modules.pipeline.models import Pipeline
 from app.modules.projects.router import router as projects_router
 from app.modules.canvas.router import router as canvas_router
 from app.modules.pipeline.router import router as pipeline_router

@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ModelNotFoundException, PipelineExecutionException
-from app.modules.projects.models import Pipeline
+from app.modules.pipeline.models import Pipeline
 from app.execution_engine.dag_parser import DAGParser
 from app.AgentControlFunctions.context import PipelineContext
 from app.AgentControlFunctions.registry import ControlRegistry

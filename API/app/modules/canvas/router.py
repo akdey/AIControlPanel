@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.modules.projects.models import Pipeline, Project
+from app.modules.projects.models import Project
+from app.modules.pipeline.models import Pipeline
 from app.modules.canvas.schemas import CanvasSavePayload, CanvasResponse
 from app.utils.datetime_utils import get_datetime, get_datetime_timestamp
 

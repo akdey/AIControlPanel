@@ -2,7 +2,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.modules.projects.models import Project, Agent, Pipeline
+from app.modules.projects.models import Project, Agent
+from app.modules.pipeline.models import Pipeline
 from app.modules.projects.schemas import ProjectCreate, ProjectResponse, AgentCreate, AgentResponse
 from app.adaptive_layer.llm_gateway import get_llm_gateway
 
