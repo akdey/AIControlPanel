@@ -2,11 +2,7 @@ import { create } from 'zustand';
 import { type Node, type Edge, type Connection, type NodeChange, type EdgeChange, addEdge, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { ControlDefinition, ControlPort } from '../types/controls';
 import type { CustomNodeData } from '../types/canvas';
-import controlsRegistry from '../data/controls.json';
 import { isValidConnection } from '../helpers/isValidConnection';
-
-const registeredControls = controlsRegistry.controls as unknown as ControlDefinition[];
-
 import { projectsApi } from '../api/services/projectsApi';
 
 interface NodeSelectorPos {
