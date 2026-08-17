@@ -54,8 +54,8 @@ const CATEGORY_ICONS: Record<string, React.FC<{ className?: string }>> = {
 export const NodePaletteDrawer: React.FC = () => {
   const { nodeSelectorPos, setNodeSelectorPos, addControlNode, addTerminalNode } = useCanvasStore();
 
-  const [categories, setCategories] = useState<ControlCategory[]>(controlsRegistry.categories as ControlCategory[]);
-  const [allControls, setAllControls] = useState<ControlDefinition[]>(controlsRegistry.controls as unknown as ControlDefinition[]);
+  const [categories, setCategories] = useState<ControlCategory[]>([]);
+  const [allControls, setAllControls] = useState<ControlDefinition[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
