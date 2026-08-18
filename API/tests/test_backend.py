@@ -20,7 +20,7 @@ def test_projects_api():
         assert res.status_code == 200
         assert isinstance(res.json(), list)
 
-def test_canvas_save_and_compiled_dag():
+def test_canvas_save_and_compiled_pipeline():
     with TestClient(app) as client:
         canvas_payload = {
             "pipeline_id": "pipe_test_compiled_101",

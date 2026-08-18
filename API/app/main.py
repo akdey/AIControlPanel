@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     with engine.connect() as conn:
         try:
-            conn.execute(text("ALTER TABLE pipelines ADD COLUMN compiled_dag JSON;"))
+            conn.execute(text("ALTER TABLE pipelines ADD COLUMN compiled_pipeline JSON;"))
             conn.commit()
         except Exception:
             pass

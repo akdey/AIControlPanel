@@ -32,6 +32,7 @@ def execute_pii_presidio(ctx: PipelineContext, node_config: Dict[str, Any]) -> P
     
     ctx.sanitized_prompt_object = dict(ctx.prompt_object)
     ctx.sanitized_prompt_object["prompt"] = sanitized_text
+    ctx.prompt_object["prompt"] = sanitized_text
     
     mutated_fields = []
     if redactions_found:

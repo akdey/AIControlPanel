@@ -15,7 +15,7 @@ class Pipeline(Base):
     agent_id = Column(String(36), ForeignKey("agents.id"), nullable=True, index=True)
     name = Column(String(255), nullable=False)
     canvas_json = Column(JSON, nullable=False, default=dict)  # Full React Flow DAG nodes and edges
-    compiled_dag = Column(JSON, nullable=True)  # Pre-compiled fast execution graph artifact
+    compiled_pipeline = Column(JSON, nullable=True)  # Pre-compiled fast execution graph artifact
     is_active = Column(Boolean, default=True)
     version = Column(Integer, default=1)
     created_at = Column(DateTime(timezone=True), default=get_datetime)

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.modules.pipeline.schemas import InvokePayload, InvokeResponse
-from app.execution_engine.runner import ExecutionRunner
+from app.modules.pipeline.engine.runner import ExecutionRunner
 
 router = APIRouter(prefix="/pipeline", tags=["Pipeline Execution Engine"])
 

@@ -20,10 +20,20 @@ class PipelineContext(BaseModel):
     intercepted_control: Optional[str] = None
     trigger_reason: Optional[str] = None
     
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    
     next_node_id: Optional[str] = None
     last_evaluated_output_port: Optional[str] = None
     routing_decision: Optional[str] = None
     final_output: Optional[Any] = None
+
+    @property
+    def is_blocked(self) -> bool:
+        return self.execution_status in ["blocked", "halted"]
+
+    @property
+    def is_mutated(self) -> bool:
+        return bool(self.redaction_metadata) or "PII_DETECTED" in self.taint_flags
     
     def add_span(
         self,
