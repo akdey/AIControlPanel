@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict
 
 class UserCreate(BaseModel):
     username: str
-    role: Optional[str] = None  # Defaults to config_data['ROLES']['ADMIN'] if omitted
+    role: str  # Mandatory RBAC role (e.g. secops_admin, super_admin, auditor)
 
 class UserResponse(BaseModel):
     id: str
@@ -20,6 +20,7 @@ class UserResponse(BaseModel):
     created_on: str
     last_login_at: Optional[str] = None
 
+    # model_config tells Pydantic to read attributes directly from SQLAlchemy ORM models (formerly orm_mode=True in Pydantic v1)
     model_config = ConfigDict(from_attributes=True)
 
 class AuthenticatePayload(BaseModel):

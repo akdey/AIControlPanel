@@ -149,16 +149,19 @@ def test_user_authentication_and_lock_flow():
     ts = int(time.time())
     uname = f"secops_u_{ts}"
     with TestClient(app) as client:
-        # 1. Create User (Admin driven - password from config.json, is_2fa_req=True by default)
+        # 1. Create User (Admin driven - mandatory role, password from config.json, privacy_accepted='N', is_2fa_req=True)
         create_res = client.post("/api/v1/users", json={
-            "username": uname
+            "username": uname,
+            "role": "secops_admin"
         })
         assert create_res.status_code == 201
         user_data = create_res.json()
         user_id = user_data["id"]
         assert user_data["username"] == uname
+        assert user_data["role"] == "secops_admin"
         assert user_data["is_pwd_change_req"] is True
         assert user_data["is_2fa_req"] is True
+        assert user_data["privacy_accepted"] == "N"
         assert user_data["failed_attempts"] == 0
 
         # 2. Successful Login with default password triggers 2fa_required status
