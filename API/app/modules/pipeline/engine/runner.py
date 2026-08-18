@@ -103,7 +103,7 @@ class ExecutionRunner:
                 action_taken = "Halt" if ctx.is_blocked else ("Redact" if ctx.is_mutated else "Allow")
 
             duration_ms = round((time.time() - span_start) * 1000, 2)
-            trace_spans.append({
+            span_data = {
                 "span_id": f"span_{current_node_id}_{int(time.time()*1000)}",
                 "node_id": current_node_id,
                 "node_label": label,
@@ -112,7 +112,9 @@ class ExecutionRunner:
                 "action_taken": action_taken,
                 "duration_ms": duration_ms,
                 "metadata": dict(ctx.metadata)
-            })
+            }
+            trace_spans.append(span_data)
+            ctx.node_outputs[current_node_id] = span_data
 
             # Check if block/halt rule triggered
             if ctx.is_blocked:

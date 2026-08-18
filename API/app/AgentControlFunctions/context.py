@@ -21,6 +21,7 @@ class PipelineContext(BaseModel):
     trigger_reason: Optional[str] = None
     
     metadata: Dict[str, Any] = Field(default_factory=dict)
+    node_outputs: Dict[str, Any] = Field(default_factory=dict)
     
     next_node_id: Optional[str] = None
     last_evaluated_output_port: Optional[str] = None

@@ -204,3 +204,64 @@ def test_user_authentication_and_lock_flow():
         assert act_res.status_code == 200
         assert act_res.json()["is_active"] is True
 
+def test_dynamic_generic_rule_evaluator_flow():
+    with TestClient(app) as client:
+        # Create pipeline with: Node Ingestion -> Node PII -> Dynamic Rule Evaluator -> LLM Gateway
+        canvas_dag = {
+            "nodes": [
+                {
+                    "id": "n_start",
+                    "type": "prompt",
+                    "data": {"label": "Ingestion", "controlId": "ingestion_node"}
+                },
+                {
+                    "id": "n_pii",
+                    "type": "controlNode",
+                    "data": {
+                        "controlId": "pii_presidio",
+                        "label": "PII Detection",
+                        "control": {"runtimeConfig": {"engine": "presidio_analyzer"}}
+                    }
+                },
+                {
+                    "id": "n_eval",
+                    "type": "controlNode",
+                    "data": {
+                        "controlId": "rule_node",
+                        "label": "Dynamic Rule Evaluator",
+                        "control": {"runtimeConfig": {"engine": "generic_condition_evaluator"}},
+                        "configValues": {
+                            "logic": "AND",
+                            "action_on_match": "BLOCK",
+                            "rules": [
+                                {
+                                    "source_node_id": "n_pii",
+                                    "field_path": "action_taken",
+                                    "operator": "==",
+                                    "value": "Redact"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            "edges": [
+                {"id": "e1", "source": "n_start", "target": "n_pii"},
+                {"id": "e2", "source": "n_pii", "target": "n_eval"}
+            ]
+        }
+        client.post("/api/v1/canvas/save", json={
+            "pipeline_id": "pipe_dynamic_rule_test",
+            "name": "Dynamic Rule Test Pipeline",
+            "canvas_json": canvas_dag
+        })
+
+        # Test prompt with SSN -> triggers PII Redact -> triggers Dynamic Rule BLOCK
+        res = client.post("/api/v1/pipeline/invoke/pipe_dynamic_rule_test", json={
+            "promptObj": {"prompt": "My SSN is 000-12-3456"}
+        })
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "blocked"
+        assert data["action_taken"] == "Halt"
+
