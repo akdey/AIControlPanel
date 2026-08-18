@@ -1,7 +1,8 @@
-import hashlib
 import os
+import hashlib
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from app.core.config_loader import config_data
 from app.core.exceptions import (
     AccountLockedException,
     ResourceNotFoundException,
@@ -27,7 +28,7 @@ def verify_password(password: str, hashed_password: str, salt: str) -> bool:
 class UserService:
     """
     Service Layer for User Management & Authentication.
-    Handles DB transactions, password hashing, failed attempt counting, and account locking.
+    Uses central config_data dictionary for runtime settings, roles, and default passwords.
     """
 
     def __init__(self, db: Session):
@@ -46,19 +47,28 @@ class UserService:
         return user
 
     def create_user(self, payload: UserCreate, created_by: str = "system") -> UserResponse:
-        """Creates a new user with hashed password."""
+        """
+        Creates a new user account with system default password from config_data['DEFAULT_PASSWORD'].
+        Sets is_2fa_req = True by default and is_pwd_change_req = True.
+        """
         existing = self.db.query(User).filter(User.username == payload.username).first()
         if existing:
             raise BaseAppException(f"Username '{payload.username}' already exists.", status_code=400, error_code="USERNAME_TAKEN")
 
-        hashed_pwd, salt = hash_password(payload.password)
+        default_pwd = config_data["DEFAULT_PASSWORD"]
+        user_role = payload.role or config_data["ROLES"]["ADMIN"]
+        hashed_pwd, salt = hash_password(default_pwd)
+
         db_user = User(
             username=payload.username,
             password=hashed_pwd,
-            role=payload.role or "secops_admin",
-            is_2fa_req=payload.is_2fa_req or False,
+            role=user_role,
+            is_2fa_req=config_data.get("DEFAULT_2FA_REQUIRED", True),  # Default True / "Y"
+            is_pwd_change_req=True,  # Forces password change on first login
             secret=salt,
-            created_by=created_by
+            privacy_accepted=config_data.get("DEFAULT_PRIVACY_ACCEPTED", "Y"),
+            created_by=created_by,
+            created_on=get_datetime()
         )
         self.db.add(db_user)
         self.db.commit()
@@ -67,9 +77,12 @@ class UserService:
 
     def authenticate_user(self, payload: AuthenticatePayload) -> AuthResponse:
         """
-        Authenticates user login credentials.
-        Increments failed_attempts on bad password and locks account after 5 consecutive failures.
+        Authenticates user login credentials (username + password).
+        Enforces MAX_FAILED_LOGIN_ATTEMPTS from config_data.
+        Returns 2fa_required if user requires 2FA authentication.
         """
+        max_attempts = config_data["MAX_FAILED_LOGIN_ATTEMPTS"]
+
         user = self.db.query(User).filter(User.username == payload.username).first()
         if not user:
             raise UnauthorizedOperationException("Invalid username or password.")
@@ -83,18 +96,39 @@ class UserService:
         is_valid = verify_password(payload.password, user.password, user.secret or "")
         if not is_valid:
             user.failed_attempts += 1
-            if user.failed_attempts >= 5:
+            if user.failed_attempts >= max_attempts:
                 user.is_locked = True
                 self.db.commit()
-                raise AccountLockedException("User account has been locked after 5 consecutive failed login attempts.")
+                raise AccountLockedException(f"User account locked after {max_attempts} consecutive failed login attempts.")
             self.db.commit()
-            raise UnauthorizedOperationException(f"Invalid username or password. ({5 - user.failed_attempts} attempts remaining)")
+            remaining = max_attempts - user.failed_attempts
+            raise UnauthorizedOperationException(f"Invalid username or password. ({remaining} attempts remaining)")
 
-        # Successful login
+        # Password is correct — reset failed attempts
         user.failed_attempts = 0
+
+        # Check Two-Factor Authentication (2FA) requirement
+        if user.is_2fa_req or user.is_2fa_enabled:
+            self.db.commit()
+            return AuthResponse(
+                status="2fa_required",
+                user=self._to_user_response(user),
+                message="Two-Factor Authentication (2FA) required to complete login."
+            )
+
+        # Update last login timestamp
         user.last_login_at = get_datetime()
         self.db.commit()
         self.db.refresh(user)
+
+        # Check if password change required
+        if user.is_pwd_change_req:
+            return AuthResponse(
+                status="pwd_change_required",
+                user=self._to_user_response(user),
+                token=f"Bearer temp_session_{user.id[:8]}",
+                message="Default password in use. Password change required."
+            )
 
         return AuthResponse(
             status="authenticated",

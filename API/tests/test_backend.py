@@ -145,31 +145,34 @@ def test_get_agent_control_by_name():
         assert ctrl["id"] == "ctrl_pii_masking"
 
 def test_user_authentication_and_lock_flow():
+    import time
+    ts = int(time.time())
+    uname = f"secops_u_{ts}"
     with TestClient(app) as client:
-        # 1. Create User
+        # 1. Create User (Admin driven - password from config.json, is_2fa_req=True by default)
         create_res = client.post("/api/v1/users", json={
-            "username": "secops_user1",
-            "password": "SecurePassword123!",
-            "role": "secops_admin"
+            "username": uname
         })
         assert create_res.status_code == 201
         user_data = create_res.json()
         user_id = user_data["id"]
-        assert user_data["username"] == "secops_user1"
+        assert user_data["username"] == uname
+        assert user_data["is_pwd_change_req"] is True
+        assert user_data["is_2fa_req"] is True
         assert user_data["failed_attempts"] == 0
 
-        # 2. Successful Login
+        # 2. Successful Login with default password triggers 2fa_required status
         auth_res = client.post("/api/v1/auth/authenticate", json={
-            "username": "secops_user1",
-            "password": "SecurePassword123!"
+            "username": uname,
+            "password": "DefaultUser@123!"
         })
         assert auth_res.status_code == 200
-        assert auth_res.json()["status"] == "authenticated"
+        assert auth_res.json()["status"] == "2fa_required"
 
-        # 3. Failed Logins & Lockout (5 attempts)
+        # 3. Failed Logins & Lockout (5 max attempts from config)
         for i in range(4):
             bad_res = client.post("/api/v1/auth/authenticate", json={
-                "username": "secops_user1",
+                "username": uname,
                 "password": "WrongPassword"
             })
             assert bad_res.status_code == 403
@@ -177,7 +180,7 @@ def test_user_authentication_and_lock_flow():
 
         # 5th failed attempt triggers lock
         lock_res = client.post("/api/v1/auth/authenticate", json={
-            "username": "secops_user1",
+            "username": uname,
             "password": "WrongPassword"
         })
         assert lock_res.status_code == 403
@@ -197,3 +200,4 @@ def test_user_authentication_and_lock_flow():
         act_res = client.post(f"/api/v1/users/activate/{user_id}")
         assert act_res.status_code == 200
         assert act_res.json()["is_active"] is True
+

@@ -3,9 +3,7 @@ from pydantic import BaseModel, ConfigDict
 
 class UserCreate(BaseModel):
     username: str
-    password: str
-    role: Optional[str] = "secops_admin"
-    is_2fa_req: Optional[bool] = False
+    role: Optional[str] = None  # Defaults to config_data['ROLES']['ADMIN'] if omitted
 
 class UserResponse(BaseModel):
     id: str
@@ -29,6 +27,7 @@ class AuthenticatePayload(BaseModel):
     password: str
 
 class AuthResponse(BaseModel):
-    status: str = "authenticated"
+    status: str  # authenticated, 2fa_required, pwd_change_required
     user: UserResponse
     token: Optional[str] = None
+    message: Optional[str] = None

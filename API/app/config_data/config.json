@@ -1,0 +1,12 @@
+{
+  "DEFAULT_PASSWORD": "DefaultUser@123!",
+  "MAX_FAILED_LOGIN_ATTEMPTS": 5,
+  "LOCKOUT_DURATION_MINUTES": 15,
+  "DEFAULT_PRIVACY_ACCEPTED": "Y",
+  "DEFAULT_2FA_REQUIRED": true,
+  "ROLES": {
+    "ADMIN": "secops_admin",
+    "SUPER_ADMIN": "super_admin",
+    "AUDITOR": "compliance_auditor"
+  }
+}

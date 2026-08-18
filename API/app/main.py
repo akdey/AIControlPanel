@@ -11,6 +11,7 @@ from app.modules.projects.models import Project, Agent
 from app.modules.pipeline.models import Pipeline
 from app.modules.users.models import User
 from app.modules.users.service import hash_password
+from app.core.config_loader import config_data
 from app.modules.projects.router import router as projects_router
 from app.modules.canvas.router import router as canvas_router
 from app.modules.pipeline.router import router as pipeline_router
@@ -51,13 +52,14 @@ def seed_initial_data():
             db.add(agent)
 
         if db.query(User).count() == 0:
-            hpwd, salt = hash_password("Admin@123")
+            hpwd, salt = hash_password(config_data.get("DEFAULT_PASSWORD", "Admin@123"))
             admin_user = User(
                 username="admin",
                 password=hpwd,
-                role="super_admin",
+                role=config_data.get("ROLES", {}).get("SUPER_ADMIN", "super_admin"),
                 secret=salt,
-                created_by="system"
+                created_by="system",
+                created_on=get_datetime()
             )
             db.add(admin_user)
 
