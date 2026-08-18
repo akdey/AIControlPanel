@@ -143,3 +143,57 @@ def test_get_agent_control_by_name():
         assert res.status_code == 200
         ctrl = res.json()
         assert ctrl["id"] == "ctrl_pii_masking"
+
+def test_user_authentication_and_lock_flow():
+    with TestClient(app) as client:
+        # 1. Create User
+        create_res = client.post("/api/v1/users", json={
+            "username": "secops_user1",
+            "password": "SecurePassword123!",
+            "role": "secops_admin"
+        })
+        assert create_res.status_code == 201
+        user_data = create_res.json()
+        user_id = user_data["id"]
+        assert user_data["username"] == "secops_user1"
+        assert user_data["failed_attempts"] == 0
+
+        # 2. Successful Login
+        auth_res = client.post("/api/v1/auth/authenticate", json={
+            "username": "secops_user1",
+            "password": "SecurePassword123!"
+        })
+        assert auth_res.status_code == 200
+        assert auth_res.json()["status"] == "authenticated"
+
+        # 3. Failed Logins & Lockout (5 attempts)
+        for i in range(4):
+            bad_res = client.post("/api/v1/auth/authenticate", json={
+                "username": "secops_user1",
+                "password": "WrongPassword"
+            })
+            assert bad_res.status_code == 403
+            assert bad_res.json()["error_code"] == "UNAUTHORIZED_ACCESS"
+
+        # 5th failed attempt triggers lock
+        lock_res = client.post("/api/v1/auth/authenticate", json={
+            "username": "secops_user1",
+            "password": "WrongPassword"
+        })
+        assert lock_res.status_code == 403
+        assert lock_res.json()["error_code"] == "ACCOUNT_LOCKED"
+
+        # 4. Admin Unlocks User
+        unlock_res = client.post(f"/api/v1/users/unlock/{user_id}")
+        assert unlock_res.status_code == 200
+        assert unlock_res.json()["is_locked"] is False
+        assert unlock_res.json()["failed_attempts"] == 0
+
+        # 5. Deactivate & Activate
+        deact_res = client.post(f"/api/v1/users/deactive/{user_id}")
+        assert deact_res.status_code == 200
+        assert deact_res.json()["is_active"] is False
+
+        act_res = client.post(f"/api/v1/users/activate/{user_id}")
+        assert act_res.status_code == 200
+        assert act_res.json()["is_active"] is True

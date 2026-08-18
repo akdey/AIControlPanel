@@ -9,12 +9,15 @@ from app.core.logging_middleware import RequestResponseLoggingMiddleware
 from app.core.database import engine, Base, SessionLocal
 from app.modules.projects.models import Project, Agent
 from app.modules.pipeline.models import Pipeline
+from app.modules.users.models import User
+from app.modules.users.service import hash_password
 from app.modules.projects.router import router as projects_router
 from app.modules.canvas.router import router as canvas_router
 from app.modules.pipeline.router import router as pipeline_router
 from app.modules.observability.router import router as observability_router
 from app.modules.finops.router import router as finops_router
 from app.modules.controls.router import router as controls_router
+from app.modules.users.router import users_router, auth_router
 
 # Initialize stdout & persistent file logger (logs/control_plane.log)
 logger = setup_logging()
@@ -46,8 +49,20 @@ def seed_initial_data():
                 status="active"
             )
             db.add(agent)
-            db.commit()
-            logger.info("Database seeding completed.")
+
+        if db.query(User).count() == 0:
+            hpwd, salt = hash_password("Admin@123")
+            admin_user = User(
+                username="admin",
+                password=hpwd,
+                role="super_admin",
+                secret=salt,
+                created_by="system"
+            )
+            db.add(admin_user)
+
+        db.commit()
+        logger.info("Database seeding completed.")
     except Exception as e:
         logger.error(f"Failed to seed initial data: {e}")
         db.rollback()
@@ -108,6 +123,8 @@ async def domain_exception_handler(request: Request, exc: BaseAppException):
     )
 
 # Include Routers with /api/v1 prefix
+app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(users_router, prefix=settings.API_V1_STR)
 app.include_router(projects_router, prefix=settings.API_V1_STR)
 app.include_router(canvas_router, prefix=settings.API_V1_STR)
 app.include_router(pipeline_router, prefix=settings.API_V1_STR)
