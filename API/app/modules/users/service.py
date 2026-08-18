@@ -1,7 +1,6 @@
 import os
 import hashlib
 from typing import List, Optional
-from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.core.config_loader import config_data
 from app.core.exceptions import (
@@ -29,47 +28,35 @@ def verify_password(password: str, hashed_password: str, salt: str) -> bool:
 class UserService:
     """
     Service Layer for User Management & Authentication.
-    Manages DB session creation and cleanup internally without requiring DB parameter injection from routers.
+    Manages DB session creation and cleanup internally per method execution.
     """
-
-    def __init__(self, db: Optional[Session] = None):
-        self._provided_db = db
-
-    def _get_session(self) -> tuple[Session, bool]:
-        """Returns tuple of (session, is_local_session)."""
-        if self._provided_db is not None:
-            return self._provided_db, False
-        return SessionLocal(), True
 
     def get_users(self) -> List[UserResponse]:
         """Fetch all registered users."""
-        db, is_local = self._get_session()
+        db = SessionLocal()
         try:
             users = db.query(User).all()
             return [self._to_user_response(u) for u in users]
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
-    def get_user_by_id(self, user_id: str, db_session: Optional[Session] = None) -> User:
+    def get_user_by_id(self, user_id: str) -> User:
         """Fetch single user by ID or raise ResourceNotFoundException."""
-        db = db_session or self._provided_db or SessionLocal()
-        is_local = db_session is None and self._provided_db is None
+        db = SessionLocal()
         try:
             user = db.query(User).filter(User.id == user_id).first()
             if not user:
                 raise ResourceNotFoundException(f"User with ID '{user_id}' not found.")
             return user
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
     def create_user(self, payload: UserCreate, created_by: str = "system") -> UserResponse:
         """
         Creates a new user account with system default password from config_data['DEFAULT_PASSWORD'].
         Defaults on creation: privacy_accepted='N', is_2fa_req=True ('Y'), is_pwd_change_req=True ('Y').
         """
-        db, is_local = self._get_session()
+        db = SessionLocal()
         try:
             existing = db.query(User).filter(User.username == payload.username).first()
             if existing:
@@ -94,8 +81,7 @@ class UserService:
             db.refresh(db_user)
             return self._to_user_response(db_user)
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
     def authenticate_user(self, payload: AuthenticatePayload) -> AuthResponse:
         """
@@ -104,7 +90,7 @@ class UserService:
         Returns 2fa_required if user requires 2FA authentication.
         """
         max_attempts = config_data["MAX_FAILED_LOGIN_ATTEMPTS"]
-        db, is_local = self._get_session()
+        db = SessionLocal()
         try:
             user = db.query(User).filter(User.username == payload.username).first()
             if not user:
@@ -159,48 +145,50 @@ class UserService:
                 token=f"Bearer sim_session_token_{user.id[:8]}"
             )
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
     def unlock_user(self, user_id: str) -> UserResponse:
         """Unlocks a locked user account and resets failed attempt counter."""
-        db, is_local = self._get_session()
+        db = SessionLocal()
         try:
-            user = self.get_user_by_id(user_id, db_session=db)
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise ResourceNotFoundException(f"User with ID '{user_id}' not found.")
             user.is_locked = False
             user.failed_attempts = 0
             db.commit()
             db.refresh(user)
             return self._to_user_response(user)
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
     def activate_user(self, user_id: str) -> UserResponse:
         """Activates a user account."""
-        db, is_local = self._get_session()
+        db = SessionLocal()
         try:
-            user = self.get_user_by_id(user_id, db_session=db)
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise ResourceNotFoundException(f"User with ID '{user_id}' not found.")
             user.is_active = True
             db.commit()
             db.refresh(user)
             return self._to_user_response(user)
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
     def deactivate_user(self, user_id: str) -> UserResponse:
         """Deactivates a user account."""
-        db, is_local = self._get_session()
+        db = SessionLocal()
         try:
-            user = self.get_user_by_id(user_id, db_session=db)
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise ResourceNotFoundException(f"User with ID '{user_id}' not found.")
             user.is_active = False
             db.commit()
             db.refresh(user)
             return self._to_user_response(user)
         finally:
-            if is_local:
-                db.close()
+            db.close()
 
     def _to_user_response(self, user: User) -> UserResponse:
         return UserResponse(
