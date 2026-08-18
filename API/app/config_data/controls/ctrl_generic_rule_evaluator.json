@@ -1,0 +1,64 @@
+{
+  "id": "ctrl_generic_rule_evaluator",
+  "type": "dynamic_router",
+  "name": "Dynamic Rule Evaluator",
+  "category": "routing",
+  "subcategory": "logic_gates",
+  "description": "Evaluates dynamic N-condition rules comparing arbitrary preceding node outputs (PII, Toxicity, FinOps, LLM, or custom) using customizable operators and logic.",
+  "ioValidation": {
+    "allowedInputs": ["scored_payload", "redaction_metadata", "generic_context", "sanitized_prompt_object"],
+    "allowedOutputs": ["prompt_object", "halt_signal", "alert_signal"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_eval", "label": "Evaluated Data", "type": "sanitized_prompt_object" }],
+    "outputs": [
+      { "id": "out_match", "label": "Rule Match (True)", "type": "sanitized_prompt_object" },
+      { "id": "out_nomatch", "label": "No Match (False)", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "logic",
+        "label": "Match Logic Condition",
+        "type": "dropdown",
+        "defaultValue": "AND",
+        "options": [
+          { "label": "Match ALL Conditions (AND)", "value": "AND" },
+          { "label": "Match ANY Condition (OR)", "value": "OR" }
+        ],
+        "helperText": "Logical connective used to combine rule evaluations."
+      },
+      {
+        "name": "action_on_match",
+        "label": "Action on Match",
+        "type": "dropdown",
+        "defaultValue": "BLOCK",
+        "options": [
+          { "label": "Halt Pipeline & Block Request (BLOCK)", "value": "BLOCK" },
+          { "label": "Flag Content & Redact Payload (REDACT)", "value": "REDACT" },
+          { "label": "Route to High-Risk Output Port (ROUTE)", "value": "ROUTE" }
+        ],
+        "helperText": "Action taken when the dynamic rules evaluate to True."
+      },
+      {
+        "name": "rules",
+        "label": "Evaluation Rules",
+        "type": "dynamic_rule_builder",
+        "defaultValue": [
+          {
+            "portIdentifier": "out_match",
+            "portLabel": "Rule Match Triggered",
+            "outputType": "sanitized_prompt_object",
+            "condition": { "==": [{ "var": "action_taken" }, "Redact"] }
+          }
+        ]
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "generic_condition_evaluator",
+    "action": "evaluate_rules"
+  }
+}
