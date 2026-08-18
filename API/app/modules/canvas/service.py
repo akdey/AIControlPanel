@@ -1,5 +1,5 @@
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from app.core.exceptions import ResourceNotFoundException
 from app.modules.projects.models import Project
 from app.modules.pipeline.models import Pipeline
 from app.modules.canvas.schemas import CanvasSavePayload, CanvasResponse
@@ -97,10 +97,7 @@ class CanvasService:
             pipeline = self.db.query(Pipeline).filter(Pipeline.agent_id == pipeline_id).first()
 
         if not pipeline:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Canvas pipeline '{pipeline_id}' not found."
-            )
+            raise ResourceNotFoundException(f"Canvas pipeline '{pipeline_id}' not found.")
 
         return CanvasResponse(
             pipeline_id=pipeline.id,

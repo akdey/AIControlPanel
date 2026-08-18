@@ -88,6 +88,25 @@ app.add_middleware(
 # Request & Response Audit Logging Middleware
 app.add_middleware(RequestResponseLoggingMiddleware)
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from app.core.exceptions import BaseAppException
+from app.utils.datetime_utils import get_datetime
+
+@app.exception_handler(BaseAppException)
+async def domain_exception_handler(request: Request, exc: BaseAppException):
+    """Global handler for domain-level business exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "error_code": exc.error_code,
+            "detail": exc.detail,
+            "extra": exc.extra,
+            "timestamp": get_datetime().isoformat()
+        }
+    )
+
 # Include Routers with /api/v1 prefix
 app.include_router(projects_router, prefix=settings.API_V1_STR)
 app.include_router(canvas_router, prefix=settings.API_V1_STR)

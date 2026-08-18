@@ -1,6 +1,6 @@
 from typing import List
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from app.core.exceptions import ResourceNotFoundException
 from app.modules.projects.models import Project, Agent
 from app.modules.projects.schemas import ProjectCreate, AgentCreate
 from app.adaptive_layer.llm_gateway import get_llm_gateway
@@ -23,7 +23,7 @@ class ProjectsService:
         """Fetch single project details by ID."""
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+            raise ResourceNotFoundException(f"Project with ID '{project_id}' not found.")
         return project
 
     def create_project(self, payload: ProjectCreate) -> Project:
@@ -47,7 +47,7 @@ class ProjectsService:
         """
         project = self.db.query(Project).filter(Project.id == payload.projectId).first()
         if not project:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent Project not found")
+            raise ResourceNotFoundException(f"Parent Project with ID '{payload.projectId}' not found.")
 
         db_agent = Agent(
             project_id=payload.projectId,
