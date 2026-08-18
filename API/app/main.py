@@ -54,10 +54,18 @@ def seed_initial_data():
     finally:
         db.close()
 
+from sqlalchemy import text
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB tables
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE pipelines ADD COLUMN compiled_dag JSON;"))
+            conn.commit()
+        except Exception:
+            pass
     seed_initial_data()
     yield
 

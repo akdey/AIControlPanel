@@ -1,10 +1,12 @@
 from typing import Dict, Any, List, Optional
 from app.core.exceptions import PipelineExecutionException
+from app.utils.datetime_utils import get_datetime
 
 class DAGParser:
     """
     Parses React Flow Canvas DAG JSON into executable graph structures.
     Supports single-path decision branches and multi-path Fan-Out execution.
+    Supports pre-compiled execution graph serialization/deserialization.
     """
 
     def __init__(self, canvas_json: Dict[str, Any]):
@@ -32,8 +34,38 @@ class DAGParser:
                     "targetHandle": target_handle,
                 })
 
+    def to_compiled_dag(self) -> Dict[str, Any]:
+        """
+        Exports a pre-compiled execution graph representation.
+        Saved directly in DB column 'compiled_dag' on canvas save to bypass runtime graph parsing.
+        """
+        start_node_id = self.find_start_node_id() if self.nodes else None
+        return {
+            "start_node_id": start_node_id,
+            "node_map": self.node_map,
+            "adjacency_map": self.adjacency_map,
+            "compiled_at": get_datetime().isoformat()
+        }
+
+    @classmethod
+    def from_compiled(cls, compiled_dag: Dict[str, Any]) -> "DAGParser":
+        """
+        Instantiates a DAGParser directly from pre-compiled execution graph metadata in O(1) time.
+        """
+        instance = cls.__new__(cls)
+        instance.raw_canvas = {}
+        instance.node_map = compiled_dag.get("node_map", {})
+        instance.nodes = list(instance.node_map.values())
+        instance.edges = []
+        instance.adjacency_map = compiled_dag.get("adjacency_map", {})
+        instance._cached_start_node_id = compiled_dag.get("start_node_id")
+        return instance
+
     def find_start_node_id(self) -> str:
         """Locates the ingestion/start node."""
+        if getattr(self, "_cached_start_node_id", None):
+            return self._cached_start_node_id
+
         if not self.nodes:
             raise PipelineExecutionException("Canvas DAG contains no nodes.")
 

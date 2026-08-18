@@ -36,11 +36,14 @@ class ExecutionRunner:
         if not pipeline:
             raise PipelineExecutionException(f"Pipeline '{pipeline_id}' not found in database.")
 
-        canvas_json = pipeline.canvas_json
-        if not canvas_json or not isinstance(canvas_json, dict) or not canvas_json.get("nodes"):
-            raise PipelineExecutionException(f"Pipeline '{pipeline_id}' contains no executable canvas nodes.")
+        if pipeline.compiled_dag and isinstance(pipeline.compiled_dag, dict) and pipeline.compiled_dag.get("start_node_id"):
+            parser = DAGParser.from_compiled(pipeline.compiled_dag)
+        else:
+            canvas_json = pipeline.canvas_json
+            if not canvas_json or not isinstance(canvas_json, dict) or not canvas_json.get("nodes"):
+                raise PipelineExecutionException(f"Pipeline '{pipeline_id}' contains no executable canvas nodes.")
+            parser = DAGParser(canvas_json)
 
-        parser = DAGParser(canvas_json)
         start_node_id = parser.find_start_node_id()
 
         # Initialize Pipeline Context

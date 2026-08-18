@@ -20,13 +20,13 @@ def test_projects_api():
         assert res.status_code == 200
         assert isinstance(res.json(), list)
 
-def test_canvas_save_and_retrieve():
+def test_canvas_save_and_compiled_dag():
     with TestClient(app) as client:
         canvas_payload = {
-            "pipeline_id": "pipe_test_101",
+            "pipeline_id": "pipe_test_compiled_101",
             "project_id": "proj_001",
             "agent_id": "agt_001",
-            "name": "Unit Test Pipeline",
+            "name": "Compiled Test Pipeline",
             "nodes": [
                 {"id": "n1", "type": "prompt", "data": {"label": "Start"}},
                 {"id": "n2", "type": "customNode", "data": {"controlId": "pii_presidio", "label": "PII"}}
@@ -38,11 +38,11 @@ def test_canvas_save_and_retrieve():
         save_res = client.post("/api/v1/canvas/save", json=canvas_payload)
         assert save_res.status_code == 200
         save_data = save_res.json()
-        assert save_data["pipeline_id"] == "pipe_test_101"
+        assert save_data["pipeline_id"] == "pipe_test_compiled_101"
 
-        get_res = client.get("/api/v1/canvas/pipe_test_101")
+        get_res = client.get("/api/v1/canvas/pipe_test_compiled_101")
         assert get_res.status_code == 200
-        assert get_res.json()["name"] == "Unit Test Pipeline"
+        assert get_res.json()["name"] == "Compiled Test Pipeline"
 
 def _ensure_test_pipeline(client):
     canvas_dag = {

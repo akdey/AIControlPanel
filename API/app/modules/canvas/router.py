@@ -6,13 +6,15 @@ from app.modules.pipeline.models import Pipeline
 from app.modules.canvas.schemas import CanvasSavePayload, CanvasResponse
 from app.utils.datetime_utils import get_datetime, get_datetime_timestamp
 
+from app.execution_engine.dag_parser import DAGParser
+
 router = APIRouter(prefix="/canvas", tags=["Canvas Studio"])
 
 @router.post("/save", response_model=CanvasResponse)
 def save_canvas(payload: CanvasSavePayload, db: Session = Depends(get_db)):
     """
     Saves or updates the React Flow DAG topology canvas_json in SQLite,
-    associating it with the target project_id and agent_id.
+    pre-compiling the execution graph into 'compiled_dag' column for fast O(1) runtime execution.
     """
     if payload.canvas_json and isinstance(payload.canvas_json, dict) and payload.canvas_json.get("nodes"):
         canvas_json = payload.canvas_json
@@ -22,12 +24,22 @@ def save_canvas(payload: CanvasSavePayload, db: Session = Depends(get_db)):
             "edges": payload.edges
         }
 
+    # Pre-compile execution graph artifact
+    compiled_dag = None
+    if canvas_json and isinstance(canvas_json, dict) and canvas_json.get("nodes"):
+        try:
+            parser = DAGParser(canvas_json)
+            compiled_dag = parser.to_compiled_dag()
+        except Exception:
+            compiled_dag = None
+
     pipeline = None
     if payload.pipeline_id:
         pipeline = db.query(Pipeline).filter(Pipeline.id == payload.pipeline_id).first()
 
     if pipeline:
         pipeline.canvas_json = canvas_json
+        pipeline.compiled_dag = compiled_dag
         pipeline.name = payload.name
         if payload.project_id and payload.project_id != "proj_default":
             pipeline.project_id = payload.project_id
@@ -53,6 +65,7 @@ def save_canvas(payload: CanvasSavePayload, db: Session = Depends(get_db)):
             agent_id=target_agent_id,
             name=payload.name,
             canvas_json=canvas_json,
+            compiled_dag=compiled_dag,
             is_active=True,
             version=1
         )
