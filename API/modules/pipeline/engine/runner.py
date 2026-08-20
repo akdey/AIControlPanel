@@ -17,7 +17,7 @@ class ExecutionRunner:
     Core Graph Traversal Execution Engine.
     Loads saved React Flow DAG directly from SQLite, initializes PipelineContext,
     and dynamically dispatches nodes via O(1) ControlRegistry lookup.
-    Supports single-path decisions and multi-path parallel Fan-Out execution.
+    Supports single-path decisions, multi-path parallel Fan-Out, and dynamic port-to-port binding.
     """
 
     def __init__(self, db: Session):
@@ -28,7 +28,7 @@ class ExecutionRunner:
         """
         Executes pipeline graph by looking up saved React Flow DAG from SQLite by pipeline_id or agent_id.
         No mock fallbacks — strictly reads live saved database state.
-        Uses pre-compiled pipeline graph artifact if available for sub-millisecond execution.
+        Uses pre-compiled pipeline graph artifact with dynamic incoming_map for sub-millisecond execution.
         """
         pipeline = self.db.query(Pipeline).filter(Pipeline.id == pipeline_id).first()
         if not pipeline:
@@ -80,6 +80,29 @@ class ExecutionRunner:
             runtime_config = control.get("runtimeConfig", {})
             engine = runtime_config.get("engine", control_id)
 
+            # -------------------------------------------------------------
+            # DYNAMIC INCOMING PORT DATA RESOLUTION
+            # -------------------------------------------------------------
+            incoming_edges = parser.get_incoming_edges(current_node_id)
+            current_inputs: Dict[str, Any] = {}
+
+            for edge in incoming_edges:
+                src_node_id = edge.get("source")
+                src_handle = edge.get("sourceHandle") or "out_pass"
+                target_handle = edge.get("targetHandle") or "in_payload"
+
+                src_output = ctx.node_outputs.get(src_node_id, {})
+                if isinstance(src_output, dict) and src_handle in src_output:
+                    port_val = src_output[src_handle]
+                elif isinstance(src_output, dict) and "data" in src_output:
+                    port_val = src_output["data"]
+                else:
+                    port_val = src_output
+
+                current_inputs[target_handle] = port_val
+
+            ctx.current_inputs = current_inputs
+
             span_start = time.time()
 
             # Process Node execution
@@ -87,20 +110,36 @@ class ExecutionRunner:
                 # Entry point node — passes prompt through
                 status = "passed"
                 action_taken = "Pass"
+                out_payload = ctx.prompt_object
+                ctx.set_output("out_prompt_obj", out_payload)
+                ctx.set_output("out_pass", out_payload)
             elif node_type == "terminal" or engine in ["allow_llm", "litellm_gateway"]:
                 target_model = ctx.metadata.get("selected_model", "gpt-4o")
+                prompt_to_send = ctx.get_input_prompt("in_term_pass") or ctx.prompt_object.get("prompt", "")
                 llm_response = await self.llm_gateway.invoke_chat_completion(
                     model=target_model,
-                    messages=[{"role": "user", "content": ctx.prompt_object.get("prompt", "")}]
+                    messages=[{"role": "user", "content": prompt_to_send}]
                 )
                 ctx.metadata["llm_response"] = llm_response
+                ctx.final_output = llm_response
                 status = "passed"
                 action_taken = "Allow"
+                ctx.set_output("out_response", llm_response)
             else:
                 # Security / Governance / Control Node dispatch
                 self._dispatch_node(ctx, node, engine)
                 status = "passed" if not ctx.is_blocked and not ctx.is_mutated else ("blocked" if ctx.is_blocked else "mutated")
                 action_taken = "Halt" if ctx.is_blocked else ("Redact" if ctx.is_mutated else "Allow")
+
+                # Populate standard output ports if not explicitly set by control function
+                cur_output = ctx.sanitized_prompt_object or ctx.prompt_object
+                ctx.set_output("out_pass", cur_output)
+                ctx.set_output("out_sanitized", cur_output)
+                ctx.set_output("out_checked", cur_output)
+                ctx.set_output("out_scanned", cur_output)
+                if ctx.is_blocked:
+                    ctx.set_output("out_toxic", {"status": "blocked", "flags": list(ctx.taint_flags)})
+                    ctx.set_output("out_block", {"status": "blocked", "reason": ctx.trigger_reason})
 
             duration_ms = round((time.time() - span_start) * 1000, 2)
             span_data = {
@@ -111,10 +150,11 @@ class ExecutionRunner:
                 "status": status,
                 "action_taken": action_taken,
                 "duration_ms": duration_ms,
-                "metadata": dict(ctx.metadata)
+                "metadata": dict(ctx.metadata),
+                "inputs_received": list(current_inputs.keys())
             }
             trace_spans.append(span_data)
-            ctx.node_outputs[current_node_id] = span_data
+            ctx.set_output("span", span_data)
 
             # Check if block/halt rule triggered
             if ctx.is_blocked:

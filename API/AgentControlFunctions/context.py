@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 class PipelineContext(BaseModel):
     """
     Mutable context passed through graph execution nodes.
+    Supports dynamic port-mapped input resolution and backward-compatible linear chains.
     """
     pipeline_id: str
     current_node_id: str = "start"
@@ -22,6 +23,7 @@ class PipelineContext(BaseModel):
     
     metadata: Dict[str, Any] = Field(default_factory=dict)
     node_outputs: Dict[str, Any] = Field(default_factory=dict)
+    current_inputs: Dict[str, Any] = Field(default_factory=dict)
     
     next_node_id: Optional[str] = None
     last_evaluated_output_port: Optional[str] = None
@@ -35,6 +37,39 @@ class PipelineContext(BaseModel):
     @property
     def is_mutated(self) -> bool:
         return bool(self.redaction_metadata) or "PII_DETECTED" in self.taint_flags
+
+    def get_input(self, port_name: str = "in_payload", default: Any = None) -> Any:
+        """
+        Dynamically retrieves the payload connected to a specific input port on this node.
+        Falls back to global sanitized_prompt_object / prompt_object for linear pipelines.
+        """
+        if port_name in self.current_inputs and self.current_inputs[port_name] is not None:
+            return self.current_inputs[port_name]
+        
+        # Fallback to sanitized prompt or original prompt
+        if self.sanitized_prompt_object and "prompt" in self.sanitized_prompt_object:
+            return self.sanitized_prompt_object
+        if self.prompt_object and "prompt" in self.prompt_object:
+            return self.prompt_object
+        return default
+
+    def get_input_prompt(self, port_name: str = "in_payload") -> str:
+        """
+        Extracts raw text string from the specified input port or context fallback.
+        """
+        val = self.get_input(port_name, "")
+        if isinstance(val, dict):
+            return str(val.get("prompt", val.get("text", val.get("content", ""))))
+        return str(val) if val is not None else ""
+
+    def set_output(self, port_name: str, payload: Any):
+        """
+        Stores an output payload on a specific output port for downstream nodes.
+        """
+        if self.current_node_id not in self.node_outputs:
+            self.node_outputs[self.current_node_id] = {}
+        if isinstance(self.node_outputs[self.current_node_id], dict):
+            self.node_outputs[self.current_node_id][port_name] = payload
     
     def add_span(
         self,
@@ -76,7 +111,7 @@ class PipelineContext(BaseModel):
             "action_taken": self.action_taken or ("Redact" if "PII_DETECTED" in self.taint_flags else "Allow"),
             "intercepted_control": self.intercepted_control,
             "trigger_reason": self.trigger_reason,
-            "sanitized_prompt_object": self.sanitized_prompt_object,
+            "sanitized_prompt_object": self.sanitized_prompt_object or self.prompt_object,
             "final_output": self.final_output,
             "taint_flags": self.taint_flags,
             "spans": self.spans,

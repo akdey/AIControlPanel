@@ -5,7 +5,8 @@ from utils.datetime_utils import get_datetime
 class DAGParser:
     """
     Parses React Flow Canvas DAG JSON into executable graph structures.
-    Supports single-path decision branches and multi-path Fan-Out execution.
+    Supports single-path decision branches, multi-path Fan-Out execution,
+    and bi-directional port binding (forward adjacency_map + reverse incoming_map).
     Supports pre-compiled execution pipeline serialization/deserialization.
     """
 
@@ -15,11 +16,13 @@ class DAGParser:
         self.edges: List[Dict[str, Any]] = self.raw_canvas.get("edges", [])
         self.node_map: Dict[str, Dict[str, Any]] = {n["id"]: n for n in self.nodes}
         self.adjacency_map: Dict[str, List[Dict[str, Any]]] = {}
+        self.incoming_map: Dict[str, List[Dict[str, Any]]] = {}
         self._build_graph()
 
     def _build_graph(self):
         for node_id in self.node_map:
             self.adjacency_map[node_id] = []
+            self.incoming_map[node_id] = []
 
         for edge in self.edges:
             source = edge.get("source")
@@ -27,9 +30,18 @@ class DAGParser:
             source_handle = edge.get("sourceHandle")
             target_handle = edge.get("targetHandle")
             
+            # Forward index (which nodes run next)
             if source in self.adjacency_map:
                 self.adjacency_map[source].append({
                     "target": target,
+                    "sourceHandle": source_handle,
+                    "targetHandle": target_handle,
+                })
+            
+            # Reverse index (which nodes and handles feed this node)
+            if target in self.incoming_map:
+                self.incoming_map[target].append({
+                    "source": source,
                     "sourceHandle": source_handle,
                     "targetHandle": target_handle,
                 })
@@ -44,6 +56,7 @@ class DAGParser:
             "start_node_id": start_node_id,
             "node_map": self.node_map,
             "adjacency_map": self.adjacency_map,
+            "incoming_map": self.incoming_map,
             "compiled_at": get_datetime().isoformat()
         }
 
@@ -58,7 +71,22 @@ class DAGParser:
         instance.nodes = list(instance.node_map.values())
         instance.edges = []
         instance.adjacency_map = compiled_pipeline.get("adjacency_map", {})
+        instance.incoming_map = compiled_pipeline.get("incoming_map", {})
         instance._cached_start_node_id = compiled_pipeline.get("start_node_id")
+
+        # Fallback if incoming_map wasn't pre-compiled in older records
+        if not instance.incoming_map and instance.adjacency_map:
+            instance.incoming_map = {n: [] for n in instance.node_map}
+            for src, edges in instance.adjacency_map.items():
+                for e in edges:
+                    tgt = e.get("target")
+                    if tgt in instance.incoming_map:
+                        instance.incoming_map[tgt].append({
+                            "source": src,
+                            "sourceHandle": e.get("sourceHandle"),
+                            "targetHandle": e.get("targetHandle"),
+                        })
+
         return instance
 
     def find_start_node_id(self) -> str:
@@ -87,6 +115,10 @@ class DAGParser:
 
     def get_node(self, node_id: str) -> Optional[Dict[str, Any]]:
         return self.node_map.get(node_id)
+
+    def get_incoming_edges(self, node_id: str) -> List[Dict[str, Any]]:
+        """Returns all edges feeding into the specified node ID."""
+        return self.incoming_map.get(node_id, [])
 
     def get_next_node_id(self, current_node_id: str, handle_id: Optional[str] = None) -> Optional[str]:
         """Resolves single target node ID for next execution step with flexible handle matching."""
