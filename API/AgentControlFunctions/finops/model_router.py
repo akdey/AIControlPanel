@@ -2,7 +2,7 @@ from typing import Dict, Any
 from AgentControlFunctions.registry import register_control
 from AgentControlFunctions.context import PipelineContext
 
-@register_control(["model_router", "dynamic_model_router"])
+@register_control(["model_router"])
 def route_model(ctx: PipelineContext, config_values: Dict[str, Any]):
     """
     Dynamic Model Router (Cost vs Quality Optimization).

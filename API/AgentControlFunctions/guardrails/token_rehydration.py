@@ -2,7 +2,7 @@ from typing import Dict, Any
 from AgentControlFunctions.registry import register_control
 from AgentControlFunctions.context import PipelineContext
 
-@register_control(["token_rehydration", "token_unmasker"])
+@register_control(["token_rehydration"])
 def rehydrate_tokens(ctx: PipelineContext, config_values: Dict[str, Any]):
     """
     Data De-Anonymization Vault Rehydrator.

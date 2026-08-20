@@ -7,7 +7,7 @@ from AgentControlFunctions.context import PipelineContext
 MRN_PATTERN = re.compile(r"\bMRN[-\s]?[0-9]{6,10}\b", re.IGNORECASE)
 HEALTH_ID_PATTERN = re.compile(r"\bHPID[-\s]?[0-9]{8,12}\b", re.IGNORECASE)
 
-@register_control(["phi_redactor", "hipaa_scrubber"])
+@register_control(["phi_redactor"])
 def scrub_phi(ctx: PipelineContext, config_values: Dict[str, Any]):
     """
     HIPAA PHI Compliance Scrubber for Medical Record Numbers and Patient IDs.

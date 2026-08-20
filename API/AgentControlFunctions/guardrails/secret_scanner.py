@@ -12,7 +12,7 @@ SECRET_PATTERNS = {
     "GitHub Personal Access Token": re.compile(r"ghp_[a-zA-Z0-9]{36}"),
 }
 
-@register_control(["secret_scanner", "secret_detector"])
+@register_control(["secret_scanner"])
 def scan_secrets(ctx: PipelineContext, config_values: Dict[str, Any]):
     """
     Scans prompt text and metadata for accidental exposure of secrets and API keys.

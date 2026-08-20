@@ -3,7 +3,7 @@ from typing import Dict, Any
 from AgentControlFunctions.registry import register_control
 from AgentControlFunctions.context import PipelineContext
 
-@register_control(["ab_testing", "canary_splitter"])
+@register_control(["ab_testing"])
 def split_traffic(ctx: PipelineContext, config_values: Dict[str, Any]):
     """
     A/B Testing & Canary Traffic Splitter.

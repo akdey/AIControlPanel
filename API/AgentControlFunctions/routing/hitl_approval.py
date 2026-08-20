@@ -2,7 +2,7 @@ from typing import Dict, Any
 from AgentControlFunctions.registry import register_control
 from AgentControlFunctions.context import PipelineContext
 
-@register_control(["hitl_approval", "human_approval_gate"])
+@register_control(["hitl_approval"])
 def gate_approval(ctx: PipelineContext, config_values: Dict[str, Any]):
     """
     Human-in-the-Loop (HITL) Approval Gate.
