@@ -30,33 +30,10 @@ from modules.users.router import users_router, auth_router
 logger = setup_logging()
 
 def seed_initial_data():
-    """Seeds SQLite DB with default initial project, agent, and pipeline if empty."""
+    """Seeds SQLite DB with default admin user (admin / Admin@123) if not present."""
     db = SessionLocal()
     try:
-        if db.query(Project).count() == 0:
-            logger.info("Seeding initial database workspace data...")
-            proj = Project(
-                id="proj_001",
-                name="Enterprise AI Core",
-                description="Primary workspace for agent governance & controls",
-                environment="production",
-                gateway_team_id="team_enterprise_ai"
-            )
-            db.add(proj)
-
-            agent = Agent(
-                id="agt_001",
-                project_id="proj_001",
-                name="Customer Support Agent",
-                role="Autonomous Task Exec",
-                model="gpt-4o",
-                monthly_spend=820.50,
-                monthly_limit=2000.0,
-                status="active"
-            )
-            db.add(agent)
-
-        if db.query(User).count() == 0:
+        if db.query(User).filter(User.username == "admin").count() == 0:
             hpwd, salt = hash_password(config_data.get("DEFAULT_PASSWORD", "Admin@123"))
             admin_user = User(
                 username="admin",
@@ -67,11 +44,10 @@ def seed_initial_data():
                 created_on=get_datetime()
             )
             db.add(admin_user)
-
-        db.commit()
-        logger.info("Database seeding completed.")
+            db.commit()
+            logger.info("Default admin user created (admin / Admin@123).")
     except Exception as e:
-        logger.error(f"Failed to seed initial data: {e}")
+        logger.error(f"Failed to seed initial admin user: {e}")
         db.rollback()
     finally:
         db.close()

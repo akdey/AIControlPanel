@@ -198,7 +198,7 @@ export const GenericControlNode = memo(({ data, selected, id }: NodeProps) => {
               <div key={port.id} className="flex items-center justify-between text-[10px]">
                 <span className="app-text-muted truncate max-w-[150px]">{port.label}</span>
                 <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-cyan-950/40 text-cyan-400 border border-cyan-500/20">
-                  {port.type}
+                  {port.label}
                 </span>
               </div>
             ))

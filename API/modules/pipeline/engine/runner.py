@@ -17,7 +17,7 @@ class ExecutionRunner:
     Core Graph Traversal Execution Engine.
     Loads saved React Flow DAG directly from SQLite, initializes PipelineContext,
     and dynamically dispatches nodes via O(1) ControlRegistry lookup.
-    Supports single-path decisions, multi-path parallel Fan-Out, and dynamic port-to-port binding.
+    Supports single-path decisions, multi-path parallel Fan-Out, and schema-driven dynamic port binding.
     """
 
     def __init__(self, db: Session):
@@ -81,21 +81,28 @@ class ExecutionRunner:
             engine = runtime_config.get("engine", control_id)
 
             # -------------------------------------------------------------
-            # DYNAMIC INCOMING PORT DATA RESOLUTION
+            # DYNAMIC INCOMING PORT DATA RESOLUTION (SCHEMA-DRIVEN)
             # -------------------------------------------------------------
             incoming_edges = parser.get_incoming_edges(current_node_id)
             current_inputs: Dict[str, Any] = {}
 
             for edge in incoming_edges:
                 src_node_id = edge.get("source")
-                src_handle = edge.get("sourceHandle") or "out_pass"
+                src_handle = edge.get("sourceHandle")
                 target_handle = edge.get("targetHandle") or "in_payload"
 
                 src_output = ctx.node_outputs.get(src_node_id, {})
-                if isinstance(src_output, dict) and src_handle in src_output:
-                    port_val = src_output[src_handle]
-                elif isinstance(src_output, dict) and "data" in src_output:
-                    port_val = src_output["data"]
+                if isinstance(src_output, dict):
+                    if src_handle and src_handle in src_output:
+                        port_val = src_output[src_handle]
+                    elif "data" in src_output:
+                        port_val = src_output["data"]
+                    elif "payload" in src_output:
+                        port_val = src_output["payload"]
+                    else:
+                        # Fallback to the first available non-span output value
+                        non_span = [v for k, v in src_output.items() if k != "span"]
+                        port_val = non_span[0] if non_span else src_output
                 else:
                     port_val = src_output
 
@@ -104,18 +111,21 @@ class ExecutionRunner:
             ctx.current_inputs = current_inputs
 
             span_start = time.time()
+            declared_outputs = control.get("ports", {}).get("outputs", [])
 
             # Process Node execution
-            if node_type == "prompt" or control_id == "ingestion_node":
-                # Entry point node — passes prompt through
+            if node_type in ["prompt", "ingestion", "start"] or control_id == "ingestion_node":
+                # Entry point node — passes prompt through to all declared output ports
                 status = "passed"
                 action_taken = "Pass"
                 out_payload = ctx.prompt_object
-                ctx.set_output("out_prompt_obj", out_payload)
-                ctx.set_output("out_pass", out_payload)
+                for port in declared_outputs:
+                    ctx.set_output(port.get("id", "out_payload"), out_payload)
+                ctx.set_output("payload", out_payload)
+
             elif node_type == "terminal" or engine in ["allow_llm", "litellm_gateway"]:
                 target_model = ctx.metadata.get("selected_model", "gpt-4o")
-                prompt_to_send = ctx.get_input_prompt("in_term_pass") or ctx.prompt_object.get("prompt", "")
+                prompt_to_send = ctx.get_input_prompt() or ctx.prompt_object.get("prompt", "")
                 llm_response = await self.llm_gateway.invoke_chat_completion(
                     model=target_model,
                     messages=[{"role": "user", "content": prompt_to_send}]
@@ -124,22 +134,41 @@ class ExecutionRunner:
                 ctx.final_output = llm_response
                 status = "passed"
                 action_taken = "Allow"
-                ctx.set_output("out_response", llm_response)
+                for port in declared_outputs:
+                    ctx.set_output(port.get("id", "out_response"), llm_response)
+                ctx.set_output("payload", llm_response)
+
             else:
                 # Security / Governance / Control Node dispatch
                 self._dispatch_node(ctx, node, engine)
                 status = "passed" if not ctx.is_blocked and not ctx.is_mutated else ("blocked" if ctx.is_blocked else "mutated")
                 action_taken = "Halt" if ctx.is_blocked else ("Redact" if ctx.is_mutated else "Allow")
 
-                # Populate standard output ports if not explicitly set by control function
+                # Schema-Driven dynamic output port population
                 cur_output = ctx.sanitized_prompt_object or ctx.prompt_object
-                ctx.set_output("out_pass", cur_output)
-                ctx.set_output("out_sanitized", cur_output)
-                ctx.set_output("out_checked", cur_output)
-                ctx.set_output("out_scanned", cur_output)
-                if ctx.is_blocked:
-                    ctx.set_output("out_toxic", {"status": "blocked", "flags": list(ctx.taint_flags)})
-                    ctx.set_output("out_block", {"status": "blocked", "reason": ctx.trigger_reason})
+                for port in declared_outputs:
+                    port_id = port.get("id")
+                    if not port_id:
+                        continue
+                    
+                    # If port was already explicitly set by control function, retain it
+                    existing_outputs = ctx.node_outputs.get(current_node_id, {})
+                    if port_id in existing_outputs:
+                        continue
+
+                    port_type = port.get("type", "")
+                    if ctx.is_blocked:
+                        if "flag" in port_type or "block" in port_id or "taint" in port_type or "toxic" in port_id:
+                            ctx.set_output(port_id, {
+                                "status": "blocked",
+                                "flags": list(ctx.taint_flags),
+                                "reason": ctx.trigger_reason
+                            })
+                    else:
+                        if not ("block" in port_id or "flag" in port_type or "taint" in port_type):
+                            ctx.set_output(port_id, cur_output)
+
+                ctx.set_output("payload", cur_output)
 
             duration_ms = round((time.time() - span_start) * 1000, 2)
             span_data = {

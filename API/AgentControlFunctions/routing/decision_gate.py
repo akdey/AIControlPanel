@@ -6,20 +6,31 @@ from AgentControlFunctions.registry import register_control
 @register_control(["decision_gate"])
 def execute_decision_gate(ctx: PipelineContext, node_config: Dict[str, Any]) -> PipelineContext:
     """
-    Decision Gate Node: Evaluates accumulated taint flags and context status.
-    Routes payload to 'out_pass' or 'out_block'.
+    Dynamic Decision Gate Node:
+    Evaluates incoming port data, taint flags, and security status.
+    Dynamically routes to configured pass/block handles without hardcoded assumptions.
     """
     start_time = time.time()
     block_on_pii = node_config.get("block_on_pii", False)
+    on_pass_handle = node_config.get("on_pass_handle", "out_pass")
+    on_block_handle = node_config.get("on_block_handle", "out_block")
 
-    # 1. Critical Security Violation (Toxicity, Injection, or Halt signals)
-    if "TOXICITY_FLAG" in ctx.taint_flags or "PROMPT_INJECTION" in ctx.taint_flags or "PROMPT_INJECTION_DETECTED" in ctx.taint_flags:
+    # Check incoming port data for upstream block indicators
+    incoming_blocked = False
+    for port_name, port_data in ctx.current_inputs.items():
+        if isinstance(port_data, dict) and port_data.get("status") == "blocked":
+            incoming_blocked = True
+            break
+
+    # 1. Critical Security Violation (Blocked status, taint flags, or blocked incoming port)
+    if ctx.is_blocked or incoming_blocked or any("INJECTION" in f or "TOXIC" in f or "SECRET" in f for f in ctx.taint_flags):
         ctx.execution_status = "blocked"
         ctx.action_taken = "Halt"
         ctx.intercepted_control = node_config.get("label", "Decision Gate")
-        ctx.trigger_reason = f"Security violation detected in taint flags: {ctx.taint_flags}"
-        ctx.last_evaluated_output_port = "out_block"
-        ctx.metadata["next_handle_id"] = "out_block"
+        if not ctx.trigger_reason:
+            ctx.trigger_reason = f"Security violation detected in context: {ctx.taint_flags}"
+        ctx.last_evaluated_output_port = on_block_handle
+        ctx.metadata["next_handle_id"] = on_block_handle
         status = "blocked"
 
     # 2. Strict PII Policy Violation (if configured to block on PII)
@@ -28,8 +39,8 @@ def execute_decision_gate(ctx: PipelineContext, node_config: Dict[str, Any]) -> 
         ctx.action_taken = "Halt"
         ctx.intercepted_control = node_config.get("label", "Decision Gate")
         ctx.trigger_reason = "Unsanitized PII detected under strict blocking policy."
-        ctx.last_evaluated_output_port = "out_block"
-        ctx.metadata["next_handle_id"] = "out_block"
+        ctx.last_evaluated_output_port = on_block_handle
+        ctx.metadata["next_handle_id"] = on_block_handle
         status = "blocked"
 
     # 3. Passed Gate Policy
@@ -37,8 +48,8 @@ def execute_decision_gate(ctx: PipelineContext, node_config: Dict[str, Any]) -> 
         ctx.execution_status = "passed"
         if not ctx.action_taken:
             ctx.action_taken = "Allow"
-        ctx.last_evaluated_output_port = "out_pass"
-        ctx.metadata["next_handle_id"] = "out_pass"
+        ctx.last_evaluated_output_port = on_pass_handle
+        ctx.metadata["next_handle_id"] = on_pass_handle
         status = "passed"
 
     end_time = time.time()
@@ -49,7 +60,7 @@ def execute_decision_gate(ctx: PipelineContext, node_config: Dict[str, Any]) -> 
         start_time=start_time,
         end_time=end_time,
         status=status,
-        input_payload=ctx.sanitized_prompt_object,
+        input_payload=ctx.sanitized_prompt_object or ctx.prompt_object,
         output_payload={
             "decisionPort": ctx.last_evaluated_output_port,
             "taintFlags": list(ctx.taint_flags)
