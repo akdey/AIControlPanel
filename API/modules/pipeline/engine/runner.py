@@ -205,10 +205,16 @@ class ExecutionRunner:
             "pipeline_id": pipeline.id,
             "status": final_status,
             "action_taken": action_taken,
+            "intercepted_control": ctx.intercepted_control,
+            "trigger_reason": ctx.trigger_reason,
             "sanitized_prompt_object": ctx.sanitized_prompt_object or ctx.prompt_object,
             "filtered_tool_manifest": ctx.tool_manifest,
+            "final_output": ctx.final_output,
+            "taint_flags": list(ctx.taint_flags),
             "metadata": ctx.metadata,
+            "spans": trace_spans,
             "trace_spans": trace_spans,
+            "total_nodes_executed": len(trace_spans),
             "execution_duration_ms": sum(s["duration_ms"] for s in trace_spans)
         }
 

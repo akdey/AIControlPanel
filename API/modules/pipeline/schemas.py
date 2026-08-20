@@ -18,4 +18,6 @@ class InvokeResponse(BaseModel):
     taint_flags: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
     spans: List[Dict[str, Any]] = Field(default_factory=list)
+    trace_spans: List[Dict[str, Any]] = Field(default_factory=list)
     total_nodes_executed: int = 0
+    execution_duration_ms: float = 0.0
