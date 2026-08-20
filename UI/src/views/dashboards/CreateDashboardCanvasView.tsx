@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { DashboardWidget, WidgetType, WidgetSize } from '../types/customDashboard';
+import type { DashboardWidget, WidgetType, WidgetSize } from '../../types/customDashboard';
 import {
   LayoutGrid,
   Save,

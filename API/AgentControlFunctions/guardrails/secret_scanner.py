@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Yelp detect-secrets OSS scanning plugins
 try:
-    from detect_secrets import SecretsCollection
+    from detect_secrets.core.scan import scan_line
     from detect_secrets.settings import default_settings
     HAS_DETECT_SECRETS = True
 except Exception as e:
@@ -35,17 +35,23 @@ def scan_secrets(ctx: PipelineContext, config_values: Dict[str, Any]):
         return ctx
 
     try:
-        secrets = SecretsCollection()
         with default_settings():
-            secrets.scan_str(prompt)
+            lines = prompt.splitlines() if prompt else [""]
+            for idx, line in enumerate(lines, start=1):
+                for secret in scan_line(line):
+                    # Filter out natural-language entropy false positives on short words (< 24 chars)
+                    # Structured credentials (AWS, Stripe, Slack, PrivateKey, GitHub, etc.) are always included
+                    is_entropy_only = secret.type in ["Base64 High Entropy String", "Hex High Entropy String"]
+                    secret_val = getattr(secret, "secret_value", "") or ""
+                    
+                    if is_entropy_only and len(secret_val) < 24:
+                        continue
 
-        for filename, secret_list in secrets.json().items():
-            for secret in secret_list:
-                detected_secrets.append({
-                    "type": secret.get("type", "Secret"),
-                    "hashed_token": secret.get("hashed_secret", ""),
-                    "line_number": secret.get("line_number", 1)
-                })
+                    detected_secrets.append({
+                        "type": secret.type,
+                        "hashed_token": getattr(secret, "secret_hash", "") or secret_val,
+                        "line_number": idx
+                    })
     except Exception as e:
         logger.error(f"detect-secrets evaluation exception ({e})")
         ctx.execution_status = "blocked"
@@ -67,9 +73,8 @@ def scan_secrets(ctx: PipelineContext, config_values: Dict[str, Any]):
             sanitized = prompt
             for sec in detected_secrets:
                 secret_type = sec.get("type", "SECRET").upper().replace(" ", "_")
-                lines = sanitized.splitlines()
-                idx = min(sec.get("line_number", 1) - 1, len(lines) - 1)
-                lines[idx] = f"[REDACTED_{secret_type}]"
+                line_idx = min(sec.get("line_number", 1) - 1, len(lines) - 1)
+                lines[line_idx] = f"[REDACTED_{secret_type}]"
                 sanitized = "\n".join(lines)
             ctx.sanitized_prompt_object["prompt"] = sanitized
             ctx.prompt_object["prompt"] = sanitized

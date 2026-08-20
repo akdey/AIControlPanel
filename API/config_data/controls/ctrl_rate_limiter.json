@@ -1,8 +1,8 @@
 {
   "id": "ctrl_rate_limiter",
   "name": "TPM / RPM Token Budgeter",
-  "category": "policy",
-  "subcategory": "compliance_audit",
+  "category": "finops",
+  "subcategory": "routing",
   "version": "1.0.0",
   "description": "Enforces per-tenant and per-agent token-per-minute and request-per-minute rate limits.",
   "author": "FinOps & Rate Control",

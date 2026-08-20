@@ -2,8 +2,8 @@
   "id": "ctrl_semantic_intent_class",
   "type": "router",
   "name": "Semantic Intent Classification",
-  "category": "traffic",
-  "subcategory": "intent_routing",
+  "category": "routing",
+  "subcategory": "traffic_split",
   "description": "Classifies incoming prompts by intent domain (finance, code, math, general) for optimal routing.",
   "ioValidation": {
     "allowedInputs": [

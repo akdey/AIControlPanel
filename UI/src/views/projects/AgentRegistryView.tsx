@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAgentStore } from '../store/agentStore';
+import { useAgentStore } from '../../store/agentStore';
 import {
   Bot,
   Shield,

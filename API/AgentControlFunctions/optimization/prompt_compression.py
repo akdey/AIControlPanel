@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 # Initialize Production LLMLingua / Spacy Syntactic POS Compressor
 try:
-    from llmlingua import PromptCompressor
-    llm_lingua_compressor = PromptCompressor(model_name="microsoft/llmlingua-2-xlm-roberta-large-meetingbank", use_llmlingua2=True)
+    # from llmlingua import PromptCompressor
+    # llm_lingua_compressor = PromptCompressor(model_name="microsoft/llmlingua-2-xlm-roberta-large-meetingbank", use_llmlingua2=True)
     HAS_LLMLINGUA = True
 except Exception as e:
     HAS_LLMLINGUA = False

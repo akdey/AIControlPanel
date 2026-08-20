@@ -2,8 +2,8 @@
   "id": "ctrl_opa_rbac",
   "type": "policy_enforcer",
   "name": "OPA / Cedar Tool Authorization",
-  "category": "policy",
-  "subcategory": "access_control",
+  "category": "routing",
+  "subcategory": "logic_gates",
   "description": "Filters unauthorized tool/MCP manifests before the prompt hits the model.",
   "ioValidation": {
     "allowedInputs": ["prompt_object", "tool_manifest"],

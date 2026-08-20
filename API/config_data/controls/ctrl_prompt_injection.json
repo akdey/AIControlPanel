@@ -1,7 +1,7 @@
 {
   "id": "ctrl_prompt_injection",
   "name": "Prompt Injection Guardrail",
-  "category": "guardrail",
+  "category": "guardrails",
   "subcategory": "content_moderation",
   "version": "1.0.0",
   "description": "Detects system prompt override attacks, jailbreaks, and injection attempts.",

@@ -14,14 +14,14 @@ export const apiClient = axios.create({
 
 /**
  * Request Interceptor:
- * Reads JWT token from browser localStorage and appends it to outgoing requests.
+ * Reads JWT token from browser localStorage and attaches it as x-access-token header.
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(JWT_STORAGE_KEY);
 
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['x-access-token'] = token;
     }
 
     return config;
@@ -33,20 +33,19 @@ apiClient.interceptors.request.use(
 
 /**
  * Response Interceptor:
- * Inspects incoming response headers for a refreshed JWT token (x-refreshed-token or authorization).
- * If a new token is present, automatically writes it back to browser localStorage.
+ * - Captures refreshed JWT from x-access-token response header.
+ * - On 401 Unauthorized, clears stale JWT and triggers auth store logout.
  */
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 1. Check header for refreshed JWT
-    const refreshedToken =
-      response.headers['x-access-token']
+    // Check header for refreshed JWT
+    const refreshedToken = response.headers['x-access-token'];
 
     if (refreshedToken && typeof refreshedToken === 'string') {
       localStorage.setItem(JWT_STORAGE_KEY, refreshedToken);
     }
 
-    // 2. Check response data payload for refreshed token if returned in body
+    // Check response data payload for refreshed token if returned in body
     if (response.data && response.data.refreshedToken) {
       localStorage.setItem(JWT_STORAGE_KEY, response.data.refreshedToken);
     }
@@ -54,9 +53,12 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    // If 401 Unauthorized, clear stale JWT from browser storage
     if (error.response && error.response.status === 401) {
       localStorage.removeItem(JWT_STORAGE_KEY);
+      // Dynamically import auth store to avoid circular dependency
+      import('../store/authStore').then(({ useAuthStore }) => {
+        useAuthStore.getState().logout();
+      });
     }
 
     return Promise.reject(error);

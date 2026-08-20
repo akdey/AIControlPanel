@@ -6,19 +6,21 @@ import { ErrorBoundary } from 'react-error-boundary';
 import '@mantine/core/styles.css';
 
 import { useThemeStore } from './store/themeStore';
+import { useAuthStore } from './store/authStore';
 import { AppSidebar } from './components/layout/AppSidebar';
 import { AppHeader } from './components/layout/AppHeader';
 import { PageLoader } from './components/common/PageLoader';
 import { GlobalErrorBoundary } from './components/common/GlobalErrorBoundary';
+import { LoginView } from './views/auth';
 
-const DashboardView = lazy(() => import('./views/DashboardView').then(m => ({ default: m.DashboardView })));
-const CustomDashboardsView = lazy(() => import('./views/CustomDashboardsView').then(m => ({ default: m.CustomDashboardsView })));
-const CreateDashboardCanvasView = lazy(() => import('./views/CreateDashboardCanvasView').then(m => ({ default: m.CreateDashboardCanvasView })));
-const ProjectsView = lazy(() => import('./views/ProjectsView').then(m => ({ default: m.ProjectsView })));
-const ObservabilityTracesView = lazy(() => import('./views/ObservabilityTracesView').then(m => ({ default: m.ObservabilityTracesView })));
-const ObservabilitySessionsView = lazy(() => import('./views/ObservabilitySessionsView').then(m => ({ default: m.ObservabilitySessionsView })));
-const ObservabilityUsersView = lazy(() => import('./views/ObservabilityUsersView').then(m => ({ default: m.ObservabilityUsersView })));
-const FinOpsView = lazy(() => import('./views/FinOpsView').then(m => ({ default: m.FinOpsView })));
+const DashboardView = lazy(() => import('./views/dashboards').then(m => ({ default: m.DashboardView })));
+const CustomDashboardsView = lazy(() => import('./views/dashboards').then(m => ({ default: m.CustomDashboardsView })));
+const CreateDashboardCanvasView = lazy(() => import('./views/dashboards').then(m => ({ default: m.CreateDashboardCanvasView })));
+const ProjectsView = lazy(() => import('./views/projects').then(m => ({ default: m.ProjectsView })));
+const ObservabilityTracesView = lazy(() => import('./views/observability').then(m => ({ default: m.ObservabilityTracesView })));
+const ObservabilitySessionsView = lazy(() => import('./views/observability').then(m => ({ default: m.ObservabilitySessionsView })));
+const ObservabilityUsersView = lazy(() => import('./views/observability').then(m => ({ default: m.ObservabilityUsersView })));
+const FinOpsView = lazy(() => import('./views/finops').then(m => ({ default: m.FinOpsView })));
 
 const queryClient = new QueryClient();
 
@@ -45,7 +47,7 @@ function AppLayout() {
           <ErrorBoundary FallbackComponent={GlobalErrorBoundary}>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Redirect / to /dashboards/default as explicitly requested! */}
+                {/* Redirect / to /dashboards/default */}
                 <Route path="/" element={<Navigate to="/dashboards/default" replace />} />
 
                 {/* Loader Demo Route */}
@@ -83,18 +85,24 @@ function AppLayout() {
 
 export function App() {
   const { theme } = useThemeStore();
+  const { status, token, rehydrate } = useAuthStore();
 
   useEffect(() => {
     document.documentElement.className = theme;
   }, [theme]);
 
+  useEffect(() => {
+    rehydrate();
+  }, [rehydrate]);
+
+  const isAuthenticated = status === 'authenticated' && !!token;
   const isLight = theme === 'light';
 
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider theme={mantineTheme} defaultColorScheme={isLight ? 'light' : 'dark'}>
         <BrowserRouter>
-          <AppLayout />
+          {isAuthenticated ? <AppLayout /> : <LoginView />}
         </BrowserRouter>
       </MantineProvider>
     </QueryClientProvider>

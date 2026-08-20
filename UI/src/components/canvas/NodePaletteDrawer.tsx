@@ -77,17 +77,19 @@ export const NodePaletteDrawer: React.FC = () => {
   // Filter controls by search and category
   const filteredControls = useMemo(() => {
     return allControls.filter((control) => {
+      const ctrlCat = (control.category || '').toLowerCase() === 'guardrail' ? 'guardrails' : (control.category || '').toLowerCase();
+
       // Category filter
-      if (selectedCategory !== 'all' && control.category !== selectedCategory) {
+      if (selectedCategory !== 'all' && ctrlCat !== selectedCategory.toLowerCase()) {
         return false;
       }
 
       // Search query filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchName = control.name.toLowerCase().includes(q);
-        const matchDesc = control.description.toLowerCase().includes(q);
-        const matchCat = control.category.toLowerCase().includes(q);
+        const matchName = (control.name || '').toLowerCase().includes(q);
+        const matchDesc = (control.description || '').toLowerCase().includes(q);
+        const matchCat = ctrlCat.includes(q);
         const matchSub = (control.subcategory || '').toLowerCase().includes(q);
         return matchName || matchDesc || matchCat || matchSub;
       }

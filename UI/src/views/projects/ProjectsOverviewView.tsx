@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProjectStore } from '../store/projectStore';
+import { useProjectStore } from '../../store/projectStore';
 import {
   FolderKanban,
   Plus,

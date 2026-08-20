@@ -16,7 +16,7 @@ except Exception as e:
     HAS_DETOXIFY = False
     logger.error(f"Critical: Detoxify PyTorch model failed to load ({e})")
 
-@register_control(["detoxify_classifier"])
+@register_control(["detoxify"])
 def execute_toxicity_detoxify(ctx: PipelineContext, node_config: Dict[str, Any]) -> PipelineContext:
     """
     Production Fail-Closed Detoxify Content Moderation Classifier.

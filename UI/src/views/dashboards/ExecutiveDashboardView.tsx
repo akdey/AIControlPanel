@@ -12,7 +12,7 @@ import {
   ShieldAlert,
   Bot,
 } from 'lucide-react';
-import { useFinOpsStore } from '../store/finopsStore';
+import { useFinOpsStore } from '../../store/finopsStore';
 
 export const ExecutiveDashboardView: React.FC = () => {
   const { data: finops } = useFinOpsStore();

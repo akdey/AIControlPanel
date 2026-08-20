@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useFinOpsStore } from '../store/finopsStore';
+import { useFinOpsStore } from '../../store/finopsStore';
 import {
   DollarSign,
   TrendingDown,

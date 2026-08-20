@@ -10,24 +10,30 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { useCanvasStore } from '../store/canvasStore';
-import { GenericControlNode } from '../components/canvas/GenericControlNode';
-import { PromptNode, TerminalNode } from '../components/canvas/PromptNode';
-import { NodeInspectorDrawer } from '../components/canvas/NodeInspectorDrawer';
-import { NodePaletteDrawer } from '../components/canvas/NodePaletteDrawer';
-import { useThemeStore } from '../store/themeStore';
+import { useCanvasStore } from '../../store/canvasStore';
+import { GenericControlNode } from '../../components/canvas/GenericControlNode';
+import { PromptNode, TerminalNode } from '../../components/canvas/PromptNode';
+import { NodeInspectorDrawer } from '../../components/canvas/NodeInspectorDrawer';
+import { NodePaletteDrawer } from '../../components/canvas/NodePaletteDrawer';
+import { useThemeStore } from '../../store/themeStore';
 import {
-  GitFork,
   Save,
+  Play,
   RotateCcw,
+  Sparkles,
   Maximize2,
-  Loader2,
+  ZoomIn,
+  ZoomOut,
+  Sliders,
+  CheckCircle2,
   AlertTriangle,
+  GitFork,
+  Loader2,
   X,
 } from 'lucide-react';
 
-import { validateGraphCompleteness } from '../helpers/isValidConnection';
-import { DeletableEdge } from '../components/canvas/DeletableEdge';
+import { validateGraphCompleteness } from '../../helpers/isValidConnection';
+import { DeletableEdge } from '../../components/canvas/DeletableEdge';
 
 const nodeTypes: NodeTypes = {
   controlNode: GenericControlNode as any,

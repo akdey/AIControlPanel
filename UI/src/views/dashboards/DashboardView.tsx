@@ -1,5 +1,5 @@
 import React from 'react';
-import dashboardData from '../data/dashboardData.json';
+import dashboardData from '../../data/dashboardData.json';
 import {
   LayoutDashboard,
   ShieldCheck,

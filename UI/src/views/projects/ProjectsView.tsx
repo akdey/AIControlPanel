@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { projectsApi } from '../api/services/projectsApi';
+import { projectsApi } from '../../api/services/projectsApi';
 import { 
   FolderKanban, 
   Bot, 

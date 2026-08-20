@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTelemetryStore } from '../store/telemetryStore';
+import { useTelemetryStore } from '../../store/telemetryStore';
 import {
   Activity,
   Search,

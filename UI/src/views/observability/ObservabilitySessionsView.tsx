@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { observabilityApi } from '../api';
+import { observabilityApi } from '../../api';
 import { 
   Activity, 
   Search, 
