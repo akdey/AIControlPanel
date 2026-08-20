@@ -3,12 +3,13 @@ import logging
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-audit_logger = logging.getLogger("control_plane.audit")
+logger = logging.getLogger(__name__)
 
 class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
     """
     Middleware for audit logging of incoming API requests and outgoing responses.
     Captures HTTP Method, Path, Client IP, Duration, Status Code, and Payload.
+    Uses unified application logging configured by setup_logging().
     """
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
@@ -27,7 +28,7 @@ class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
             except Exception:
                 req_body = "[Unreadable Request Body]"
 
-        audit_logger.info(
+        logger.info(
             f"--> [API REQ] {request.method} {request.url.path} | Client: {client_ip}"
             f"{f' | Payload: {req_body[:300]}' if req_body else ''}"
         )
@@ -36,13 +37,13 @@ class RequestResponseLoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             duration_ms = (time.time() - start_time) * 1000
 
-            audit_logger.info(
+            logger.info(
                 f"<-- [API RES] {request.method} {request.url.path} | Status: {response.status_code} | Duration: {duration_ms:.2f}ms"
             )
             return response
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
-            audit_logger.error(
+            logger.error(
                 f"<-- [API ERR] {request.method} {request.url.path} | Error: {str(e)} | Duration: {duration_ms:.2f}ms"
             )
             raise e
