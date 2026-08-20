@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiClient, tokenService } from '../api/apiClient';
+import { apiClient, tokenService, registerUnauthorizedHandler, JWT_STORAGE_KEY } from '../api/apiClient';
 
 export interface AuthUser {
   id?: string;
@@ -129,7 +129,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
     const claims = parseJwtClaims(token);
     if (!claims) {
-      // Stale or expired token
+      // Stale, corrupted or expired token in storage
       tokenService.removeToken();
       set({
         status: 'error',
@@ -144,6 +144,27 @@ export const useAuthStore = create<AuthState>()((set) => ({
       user: claims,
       token,
       status: claims.is_pwd_change_req ? 'pwd_change_required' : 'authenticated',
+      errorMessage: null,
     });
   },
 }));
+
+// Wire up synchronous 401 callback
+registerUnauthorizedHandler((message?: string) => {
+  useAuthStore.getState().handleUnauthorized(message);
+});
+
+// Real-time synchronization when token is edited or removed from browser localStorage in DevTools or other tabs
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === JWT_STORAGE_KEY) {
+      if (!event.newValue) {
+        useAuthStore.getState().handleUnauthorized(
+          'You have been logged out due to inactivity or session expiry. Please sign in again.'
+        );
+      } else {
+        useAuthStore.getState().rehydrate();
+      }
+    }
+  });
+}

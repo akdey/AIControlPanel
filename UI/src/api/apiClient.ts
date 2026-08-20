@@ -3,6 +3,13 @@ import type { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axio
 
 export const JWT_STORAGE_KEY = 'control_plane_jwt';
 
+type UnauthorizedCallback = (message?: string) => void;
+let unauthorizedHandler: UnauthorizedCallback | null = null;
+
+export const registerUnauthorizedHandler = (cb: UnauthorizedCallback) => {
+  unauthorizedHandler = cb;
+};
+
 // Base Axios instance
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -34,7 +41,7 @@ apiClient.interceptors.request.use(
 /**
  * Response Interceptor:
  * - Captures refreshed JWT from x-access-token response header.
- * - On 401 Unauthorized, clears stale JWT and triggers auth store logout.
+ * - On 401 Unauthorized, immediately triggers synchronous auth store logout & notification.
  */
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -55,12 +62,11 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem(JWT_STORAGE_KEY);
-      // Dynamically import auth store to avoid circular dependency
-      import('../store/authStore').then(({ useAuthStore }) => {
-        useAuthStore.getState().handleUnauthorized(
+      if (unauthorizedHandler) {
+        unauthorizedHandler(
           'You have been logged out due to inactivity or session expiry. Please sign in again.'
         );
-      });
+      }
     }
 
     return Promise.reject(error);
