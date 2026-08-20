@@ -102,6 +102,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from core.rbac_middleware import JWTAuthRBACMiddleware
+
+# JWT Authentication & RBAC Route Access Control Middleware
+app.add_middleware(JWTAuthRBACMiddleware)
+
 # Request & Response Audit Logging Middleware
 app.add_middleware(RequestResponseLoggingMiddleware)
 

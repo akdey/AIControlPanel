@@ -116,12 +116,23 @@ class UserService:
             # Password is correct — reset failed attempts
             user.failed_attempts = 0
 
+            from core.jwt_utils import create_jwt_token
+            jwt_token = create_jwt_token({
+                "sub": user.username,
+                "username": user.username,
+                "role": user.role,
+                "user_id": user.id,
+                "is_pwd_change_req": user.is_pwd_change_req,
+                "is_2fa_req": user.is_2fa_req
+            })
+
             # Check Two-Factor Authentication (2FA) requirement
             if user.is_2fa_req or user.is_2fa_enabled:
                 db.commit()
                 return AuthResponse(
                     status="2fa_required",
                     user=self._to_user_response(user),
+                    token=jwt_token,
                     message="Two-Factor Authentication (2FA) required to complete login."
                 )
 
@@ -135,14 +146,14 @@ class UserService:
                 return AuthResponse(
                     status="pwd_change_required",
                     user=self._to_user_response(user),
-                    token=f"Bearer temp_session_{user.id[:8]}",
+                    token=jwt_token,
                     message="Default password in use. Password change required."
                 )
 
             return AuthResponse(
                 status="authenticated",
                 user=self._to_user_response(user),
-                token=f"Bearer sim_session_token_{user.id[:8]}"
+                token=jwt_token
             )
         finally:
             db.close()

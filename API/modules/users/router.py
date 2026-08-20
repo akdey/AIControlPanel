@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 from modules.users.schemas import UserCreate, UserResponse, AuthenticatePayload, AuthResponse
 from modules.users.service import UserService
 
@@ -7,10 +7,13 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication & Identity"])
 users_router = APIRouter(prefix="/users", tags=["User Management"])
 
 @auth_router.post("/authenticate", response_model=AuthResponse)
-def authenticate(payload: AuthenticatePayload):
-    """Authenticates user login credentials."""
+def authenticate(payload: AuthenticatePayload, response: Response):
+    """Authenticates user login credentials and returns x-access-token JWT header."""
     service = UserService()
-    return service.authenticate_user(payload)
+    res = service.authenticate_user(payload)
+    if res.token:
+        response.headers["x-access-token"] = res.token
+    return res
 
 @users_router.get("", response_model=List[UserResponse])
 def get_users():
