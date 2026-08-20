@@ -57,7 +57,9 @@ apiClient.interceptors.response.use(
       localStorage.removeItem(JWT_STORAGE_KEY);
       // Dynamically import auth store to avoid circular dependency
       import('../store/authStore').then(({ useAuthStore }) => {
-        useAuthStore.getState().logout();
+        useAuthStore.getState().handleUnauthorized(
+          'You have been logged out due to inactivity or session expiry. Please sign in again.'
+        );
       });
     }
 

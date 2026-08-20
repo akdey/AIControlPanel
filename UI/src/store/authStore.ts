@@ -18,6 +18,7 @@ interface AuthState {
   errorMessage: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  handleUnauthorized: (message?: string) => void;
   rehydrate: () => void;
 }
 
@@ -109,6 +110,16 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ user: null, token: null, status: 'idle', errorMessage: null });
   },
 
+  handleUnauthorized: (message?: string) => {
+    tokenService.removeToken();
+    set({
+      user: null,
+      token: null,
+      status: 'error',
+      errorMessage: message || 'You have been logged out due to inactivity or session expiry. Please sign in again.',
+    });
+  },
+
   rehydrate: () => {
     const token = tokenService.getToken();
     if (!token) {
@@ -120,7 +131,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
     if (!claims) {
       // Stale or expired token
       tokenService.removeToken();
-      set({ status: 'idle', user: null, token: null });
+      set({
+        status: 'error',
+        user: null,
+        token: null,
+        errorMessage: 'You have been logged out due to inactivity or session expiry. Please sign in again.',
+      });
       return;
     }
 

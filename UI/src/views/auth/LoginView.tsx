@@ -194,12 +194,16 @@ export const LoginView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Error Notification */}
+              {/* Notification Banner (Errors or Inactivity Logout) */}
               {status === 'error' && errorMessage && (
                 <div className="auth-error-card">
                   <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
                   <div className="auth-error-content">
-                    <span className="auth-error-title">Authentication Failed</span>
+                    <span className="auth-error-title">
+                      {errorMessage.toLowerCase().includes('inactivity') || errorMessage.toLowerCase().includes('expired')
+                        ? 'Session Terminated'
+                        : 'Authentication Failed'}
+                    </span>
                     <span className="auth-error-desc">{errorMessage}</span>
                   </div>
                 </div>
