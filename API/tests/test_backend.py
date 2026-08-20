@@ -265,3 +265,48 @@ def test_dynamic_generic_rule_evaluator_flow():
         assert data["status"] == "blocked"
         assert data["action_taken"] == "Halt"
 
+def test_secret_scanner_and_model_router_flow():
+    with TestClient(app) as client:
+        # Test 1: Secret Scanner Blocking
+        canvas_dag = {
+            "nodes": [
+                {"id": "n_start", "type": "prompt", "data": {"label": "Ingestion", "controlId": "ingestion_node"}},
+                {"id": "n_secret", "type": "controlNode", "data": {"controlId": "secret_scanner", "label": "Secret Scanner", "control": {"runtimeConfig": {"engine": "secret_scanner"}}}}
+            ],
+            "edges": [{"id": "e1", "source": "n_start", "target": "n_secret"}]
+        }
+        client.post("/api/v1/canvas/save", json={
+            "pipeline_id": "pipe_secret_test",
+            "name": "Secret Test Pipeline",
+            "canvas_json": canvas_dag
+        })
+        res = client.post("/api/v1/pipeline/invoke/pipe_secret_test", json={
+            "promptObj": {"prompt": "Here is my secret API key: ghp_123456789012345678901234567890123456"}
+        })
+        assert res.status_code == 200
+        assert res.json()["status"] == "blocked"
+
+        # Test 2: Native Model Router setting selected_model
+        router_dag = {
+            "nodes": [
+                {"id": "n_start", "type": "prompt", "data": {"label": "Ingestion", "controlId": "ingestion_node"}},
+                {"id": "n_router", "type": "controlNode", "data": {"controlId": "model_router", "label": "Model Router", "control": {"runtimeConfig": {"engine": "model_router"}}, "configValues": {"fast_model": "gpt-4o-mini", "premium_model": "gpt-4o", "complexity_token_threshold": 5}}},
+                {"id": "n_term", "type": "terminal", "data": {"label": "LLM Gateway", "controlId": "litellm_gateway"}}
+            ],
+            "edges": [
+                {"id": "e1", "source": "n_start", "target": "n_router"},
+                {"id": "e2", "source": "n_router", "target": "n_term"}
+            ]
+        }
+        client.post("/api/v1/canvas/save", json={
+            "pipeline_id": "pipe_router_test",
+            "name": "Model Router Pipeline",
+            "canvas_json": router_dag
+        })
+        res2 = client.post("/api/v1/pipeline/invoke/pipe_router_test", json={
+            "promptObj": {"prompt": "This is a long prompt exceeding complexity threshold to test dynamic model routing"}
+        })
+        assert res2.status_code == 200
+        assert res2.json()["metadata"]["selected_model"] == "gpt-4o"
+
+

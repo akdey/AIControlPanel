@@ -1,0 +1,33 @@
+{
+  "id": "ctrl_context_truncator",
+  "type": "finops",
+  "name": "Context Window Truncator",
+  "category": "finops",
+  "subcategory": "context_management",
+  "description": "Truncates conversation histories exceeding maximum token limits using tiktoken tokenizer.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["truncated_messages_payload"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_truncated", "label": "Truncated Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "max_token_budget",
+        "label": "Max Allowed Token Budget",
+        "type": "number_input",
+        "defaultValue": 4096
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "context_truncator",
+    "action": "truncate_context"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_rag_groundedness",
+  "type": "knowledge",
+  "name": "RAG Groundedness & Hallucination Evaluator",
+  "category": "knowledge",
+  "subcategory": "rag_eval",
+  "description": "Compares LLM outputs against retrieved reference text to catch ungrounded claims and hallucinations. (Phase 2)",
+  "status": "disabled",
+  "is_enabled": false,
+  "ioValidation": {
+    "allowedInputs": ["context_and_response"],
+    "allowedOutputs": ["groundedness_report"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_evaluated", "label": "Evaluated Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": []
+  },
+  "runtimeConfig": {
+    "engine": "rag_groundedness",
+    "action": "evaluate_groundedness"
+  }
+}

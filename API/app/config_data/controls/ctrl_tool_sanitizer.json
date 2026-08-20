@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_tool_sanitizer",
+  "type": "sandboxing",
+  "name": "Tool Call Parameter Sanitizer",
+  "category": "sandboxing",
+  "subcategory": "tool_governance",
+  "description": "Validates function call arguments against Pydantic type schemas before invocation. (Phase 2)",
+  "status": "disabled",
+  "is_enabled": false,
+  "ioValidation": {
+    "allowedInputs": ["tool_call_payload"],
+    "allowedOutputs": ["validated_tool_call"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_tool", "label": "Tool Call In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_valid", "label": "Valid Call Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": []
+  },
+  "runtimeConfig": {
+    "engine": "tool_sanitizer",
+    "action": "sanitize_tool"
+  }
+}

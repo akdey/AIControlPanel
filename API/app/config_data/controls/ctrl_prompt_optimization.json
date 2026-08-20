@@ -1,0 +1,33 @@
+{
+  "id": "ctrl_prompt_optimization",
+  "type": "optimization",
+  "name": "Prompt Optimizer & Refiner",
+  "category": "optimization",
+  "subcategory": "refinement",
+  "description": "Rewrites user prompts to add structural clarity, system formatting, and explicit guardrail instructions before model dispatch.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["optimized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_prompt", "label": "Prompt In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_optimized", "label": "Optimized Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "add_markdown_formatting",
+        "label": "Enforce Markdown Structure",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "prompt_optimization",
+    "action": "optimize_prompt"
+  }
+}

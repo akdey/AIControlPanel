@@ -1,0 +1,33 @@
+{
+  "id": "ctrl_token_rehydration",
+  "type": "guardrail_evaluator",
+  "name": "Data De-Anonymization / Token Rehydrator",
+  "category": "guardrails",
+  "subcategory": "privacy",
+  "description": "Reverses redacted tokens back to original values after receiving safe completions from LLM providers.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["llm_response_text", "redaction_metadata"],
+    "allowedOutputs": ["rehydrated_response"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_response", "label": "Response In", "type": "sanitized_prompt_object" }],
+    "outputs": [{ "id": "out_rehydrated", "label": "Rehydrated Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "enable_vault_lookup",
+        "label": "Enable Vault Unmasking",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "token_rehydration",
+    "action": "rehydrate_tokens"
+  }
+}

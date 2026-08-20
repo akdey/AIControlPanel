@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
+  "version": "2.0.0",
   "categories": [
     {
       "id": "guardrails",
@@ -7,43 +7,57 @@
       "icon": "ShieldAlert",
       "subcategories": [
         { "id": "input_safety", "label": "PII & Secret Protection" },
-        { "id": "content_moderation", "label": "Content Moderation & Jailbreaks" }
-      ]
-    },
-    {
-      "id": "routing",
-      "label": "Traffic & Routing",
-      "icon": "GitFork",
-      "subcategories": [
-        { "id": "logic_gates", "label": "Decision Gates & Branching" },
-        { "id": "model_routing", "label": "Model Fallbacks & Load Balancing" }
-      ]
-    },
-    {
-      "id": "policy",
-      "label": "Policy & Governance",
-      "icon": "Lock",
-      "subcategories": [
-        { "id": "access_control", "label": "OPA & Tool Authorization" },
-        { "id": "compliance_audit", "label": "Token Budgeting & Audit Logs" }
+        { "id": "content_moderation", "label": "Content Moderation & Jailbreaks" },
+        { "id": "privacy", "label": "HIPAA & De-Anonymization" }
       ]
     },
     {
       "id": "optimization",
-      "label": "Optimization & Caching",
+      "label": "Optimization & Refinement",
       "icon": "Zap",
       "subcategories": [
-        { "id": "caching", "label": "Semantic Vector Cache" },
-        { "id": "context_window", "label": "Context Window Compression" }
+        { "id": "token_pruning", "label": "Prompt Compression" },
+        { "id": "refinement", "label": "Prompt Refinement" },
+        { "id": "caching", "label": "Semantic Vector Cache" }
+      ]
+    },
+    {
+      "id": "finops",
+      "label": "FinOps & Resource Control",
+      "icon": "DollarSign",
+      "subcategories": [
+        { "id": "routing", "label": "Dynamic Model Router" },
+        { "id": "context_management", "label": "Context Window Truncator" }
+      ]
+    },
+    {
+      "id": "routing",
+      "label": "Traffic & Routing Logic",
+      "icon": "GitFork",
+      "subcategories": [
+        { "id": "logic_gates", "label": "Decision Gates & Evaluators" },
+        { "id": "traffic_split", "label": "A/B Testing & Canary" },
+        { "id": "approval_gate", "label": "Human-in-the-Loop Approval" }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "label": "Knowledge & RAG (Phase 2)",
+      "icon": "BookOpen",
+      "subcategories": [
+        { "id": "rag_eval", "label": "Groundedness & Hallucinations" },
+        { "id": "retrieval", "label": "Vector DB Context" },
+        { "id": "chunking", "label": "Semantic Document Chunking" }
       ]
     },
     {
       "id": "sandboxing",
-      "label": "Execution Sandbox",
+      "label": "Execution Sandbox (Phase 2)",
       "icon": "Box",
       "subcategories": [
-        { "id": "microvm", "label": "Firecracker & WASI Isolation" },
-        { "id": "tool_verification", "label": "Tool Code Audit" }
+        { "id": "microvm", "label": "Isolated Code MicroVM" },
+        { "id": "tool_governance", "label": "Tool Parameter Sanitizer" },
+        { "id": "sql_governance", "label": "SQL Query Guardrail" }
       ]
     }
   ]

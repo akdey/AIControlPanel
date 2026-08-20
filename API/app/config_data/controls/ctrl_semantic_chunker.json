@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_semantic_chunker",
+  "type": "knowledge",
+  "name": "Semantic Document Chunker",
+  "category": "knowledge",
+  "subcategory": "chunking",
+  "description": "Splits raw documents into semantically coherent text chunks for vector indexing. (Phase 2)",
+  "status": "disabled",
+  "is_enabled": false,
+  "ioValidation": {
+    "allowedInputs": ["document_payload"],
+    "allowedOutputs": ["chunked_payload"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_doc", "label": "Document In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_chunks", "label": "Chunks Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": []
+  },
+  "runtimeConfig": {
+    "engine": "semantic_chunker",
+    "action": "chunk_document"
+  }
+}

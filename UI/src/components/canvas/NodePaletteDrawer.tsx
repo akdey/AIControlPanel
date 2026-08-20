@@ -362,23 +362,32 @@ export const NodePaletteDrawer: React.FC = () => {
                               {isExpanded && (
                                 <div className="grid grid-cols-2 gap-2">
                                   {subControls.map((control) => {
-                                    const isMatch = Boolean(sourcePortType);
+                                    const isDisabled = control.is_enabled === false || (control as any).status === 'disabled';
+                                    const isMatch = Boolean(sourcePortType) && !isDisabled;
                                     return (
                                       <div
                                         key={control.id}
-                                        onClick={() => handleAddControl(control)}
-                                        className="group p-2.5 rounded-xl border app-border app-surface hover:border-cyan-500/60 hover:bg-cyan-950/20 transition-all cursor-pointer flex flex-col justify-between space-y-2 shadow-xs"
+                                        onClick={() => !isDisabled && handleAddControl(control)}
+                                        className={`group p-2.5 rounded-xl border app-border app-surface transition-all flex flex-col justify-between space-y-2 shadow-xs ${
+                                          isDisabled
+                                            ? 'opacity-50 cursor-not-allowed border-dashed bg-slate-900/40'
+                                            : 'hover:border-cyan-500/60 hover:bg-cyan-950/20 cursor-pointer'
+                                        }`}
                                       >
                                         <div className="space-y-1">
                                           <div className="flex items-center justify-between">
                                             <h4 className="text-xs font-bold app-text-main group-hover:text-cyan-400 transition-colors truncate max-w-[170px]" title={control.name}>
                                               {control.name}
                                             </h4>
-                                            {isMatch && (
+                                            {isDisabled ? (
+                                              <span className="text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">
+                                                Phase 2
+                                              </span>
+                                            ) : isMatch ? (
                                               <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
                                                 Match
                                               </span>
-                                            )}
+                                            ) : null}
                                           </div>
                                           <p className="text-[10px] app-text-muted line-clamp-2 leading-relaxed">
                                             {control.description}
@@ -387,7 +396,11 @@ export const NodePaletteDrawer: React.FC = () => {
 
                                         <div className="pt-1.5 border-t app-border flex items-center justify-between text-[9px] font-mono app-text-subtle group-hover:text-cyan-400 transition-colors">
                                           <span className="truncate max-w-[130px]">Engine: {control.id}</span>
-                                          <span className="flex items-center gap-0.5 font-bold"><Plus className="w-3 h-3" /> Insert</span>
+                                          {isDisabled ? (
+                                            <span className="text-[9px] font-mono text-amber-400 font-bold">Coming Soon</span>
+                                          ) : (
+                                            <span className="flex items-center gap-0.5 font-bold"><Plus className="w-3 h-3" /> Insert</span>
+                                          )}
                                         </div>
                                       </div>
                                     );

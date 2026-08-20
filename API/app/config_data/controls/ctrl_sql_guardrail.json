@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_sql_guardrail",
+  "type": "sandboxing",
+  "name": "Database SQL Query Guardrail",
+  "category": "sandboxing",
+  "subcategory": "sql_governance",
+  "description": "Enforces read-only SELECT queries, blocking destructive SQL operations (DROP, DELETE, UPDATE). (Phase 2)",
+  "status": "disabled",
+  "is_enabled": false,
+  "ioValidation": {
+    "allowedInputs": ["sql_query_text"],
+    "allowedOutputs": ["sql_safety_status"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_sql", "label": "SQL In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_safe", "label": "Safe SQL Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": []
+  },
+  "runtimeConfig": {
+    "engine": "sql_guardrail",
+    "action": "check_sql"
+  }
+}

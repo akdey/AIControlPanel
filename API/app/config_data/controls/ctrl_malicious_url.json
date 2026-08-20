@@ -1,0 +1,33 @@
+{
+  "id": "ctrl_malicious_url",
+  "type": "guardrail_evaluator",
+  "name": "Malicious URL & Reputation Checker",
+  "category": "guardrails",
+  "subcategory": "input_safety",
+  "description": "Extracts embedded URLs from prompts or outputs and checks domain reputation feeds for phishing/malware threats.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object", "raw_text"],
+    "allowedOutputs": ["sanitized_prompt_object", "url_analysis"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_checked", "label": "Checked Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "block_suspicious_tlds",
+        "label": "Block Suspicious TLDs (.zip, .top, .kim)",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "malicious_url",
+    "action": "check_urls"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_code_sandbox",
+  "type": "sandboxing",
+  "name": "Isolated Code Execution MicroVM",
+  "category": "sandboxing",
+  "subcategory": "microvm",
+  "description": "Executes LLM-generated code inside ephemeral Firecracker microVMs or sandboxes. (Phase 2)",
+  "status": "disabled",
+  "is_enabled": false,
+  "ioValidation": {
+    "allowedInputs": ["code_snippet"],
+    "allowedOutputs": ["execution_result"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_code", "label": "Code In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_result", "label": "Result Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": []
+  },
+  "runtimeConfig": {
+    "engine": "code_sandbox",
+    "action": "execute_code"
+  }
+}

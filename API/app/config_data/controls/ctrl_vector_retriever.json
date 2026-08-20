@@ -1,0 +1,26 @@
+{
+  "id": "ctrl_vector_retriever",
+  "type": "knowledge",
+  "name": "Vector DB Context Retriever",
+  "category": "knowledge",
+  "subcategory": "retrieval",
+  "description": "Fetches enterprise knowledge chunks from vector databases based on semantic similarity. (Phase 2)",
+  "status": "disabled",
+  "is_enabled": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["retrieved_rag_context"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_prompt", "label": "Prompt In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_context", "label": "Context Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": []
+  },
+  "runtimeConfig": {
+    "engine": "vector_retriever",
+    "action": "retrieve_context"
+  }
+}

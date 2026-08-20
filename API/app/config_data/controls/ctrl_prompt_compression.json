@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_prompt_compression",
+  "type": "optimization",
+  "name": "Prompt Compression & Token Pruner",
+  "category": "optimization",
+  "subcategory": "token_pruning",
+  "description": "Compresses prompts by pruning low-information tokens and redundant sentences to reduce latency and token usage.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["compressed_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_prompt", "label": "Prompt In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_compressed", "label": "Compressed Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "target_compression_ratio",
+        "label": "Target Compression Ratio",
+        "type": "slider",
+        "min": 0.2,
+        "max": 0.8,
+        "step": 0.05,
+        "defaultValue": 0.5,
+        "helperText": "Target fraction of original tokens to preserve (e.g. 0.5 = 50% reduction)."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "prompt_compression",
+    "action": "compress_prompt"
+  }
+}

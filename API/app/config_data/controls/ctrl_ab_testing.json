@@ -1,0 +1,39 @@
+{
+  "id": "ctrl_ab_testing",
+  "type": "dynamic_router",
+  "name": "A/B Testing & Canary Splitter",
+  "category": "routing",
+  "subcategory": "traffic_split",
+  "description": "Splits execution traffic between downstream canvas paths based on configured percentage weights.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["selected_branch"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_branch_a", "label": "Branch A (80%)", "type": "sanitized_prompt_object" },
+      { "id": "out_branch_b", "label": "Branch B (20%)", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "branch_a_weight",
+        "label": "Branch A Traffic Weight (%)",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "step": 5,
+        "defaultValue": 80
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "ab_testing",
+    "action": "split_traffic"
+  }
+}

@@ -88,9 +88,9 @@ class ExecutionRunner:
                 status = "passed"
                 action_taken = "Pass"
             elif node_type == "terminal" or engine in ["allow_llm", "litellm_gateway"]:
-                # Gateway / Terminal execution node
+                target_model = ctx.metadata.get("selected_model", "gpt-4o")
                 llm_response = await self.llm_gateway.invoke_chat_completion(
-                    model="gpt-4o",
+                    model=target_model,
                     messages=[{"role": "user", "content": ctx.prompt_object.get("prompt", "")}]
                 )
                 ctx.metadata["llm_response"] = llm_response

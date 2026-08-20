@@ -1,0 +1,39 @@
+{
+  "id": "ctrl_hitl_approval",
+  "type": "dynamic_router",
+  "name": "Human-in-the-Loop (HITL) Approval Gate",
+  "category": "routing",
+  "subcategory": "approval_gate",
+  "description": "Suspends pipeline execution for high-risk requests until approved by a human operator via callback.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["approval_status"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_approved", "label": "Approved Branch", "type": "sanitized_prompt_object" },
+      { "id": "out_rejected", "label": "Rejected Branch", "type": "security_refusal" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "auto_approve_below_score",
+        "label": "Auto-Approve Risk Threshold",
+        "type": "slider",
+        "min": 0,
+        "max": 1,
+        "step": 0.05,
+        "defaultValue": 0.3
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "hitl_approval",
+    "action": "gate_approval"
+  }
+}

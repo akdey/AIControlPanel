@@ -16,5 +16,6 @@ class InvokeResponse(BaseModel):
     sanitized_prompt_object: Dict[str, Any] = Field(default_factory=dict)
     final_output: Optional[Any] = None
     taint_flags: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
     spans: List[Dict[str, Any]] = Field(default_factory=list)
     total_nodes_executed: int = 0

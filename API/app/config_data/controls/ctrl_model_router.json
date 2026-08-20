@@ -1,0 +1,47 @@
+{
+  "id": "ctrl_model_router",
+  "type": "finops",
+  "name": "Dynamic Model Router (Cost / Quality)",
+  "category": "finops",
+  "subcategory": "routing",
+  "description": "Evaluates prompt length & complexity to dynamically select the optimal target model using existing LiteLLM Gateway.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["selected_model_target"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_prompt", "label": "Prompt In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_routed", "label": "Routed Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "fast_model",
+        "label": "Fast / Cheap Model Target",
+        "type": "text_input",
+        "defaultValue": "gpt-4o-mini",
+        "placeholder": "e.g. gpt-4o-mini"
+      },
+      {
+        "name": "premium_model",
+        "label": "Premium Model Target",
+        "type": "text_input",
+        "defaultValue": "gpt-4o",
+        "placeholder": "e.g. gpt-4o"
+      },
+      {
+        "name": "complexity_token_threshold",
+        "label": "Complexity Token Threshold",
+        "type": "number_input",
+        "defaultValue": 500
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "model_router",
+    "action": "route_model"
+  }
+}

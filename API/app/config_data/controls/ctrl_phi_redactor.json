@@ -1,0 +1,33 @@
+{
+  "id": "ctrl_phi_redactor",
+  "type": "guardrail_evaluator",
+  "name": "PHI (HIPAA) Compliance Scrubber",
+  "category": "guardrails",
+  "subcategory": "privacy",
+  "description": "Specialized HIPAA privacy scrubber for Medical Record Numbers (MRN), Health Plan IDs, Diagnoses, and Patient Data.",
+  "status": "enabled",
+  "is_enabled": true,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object", "raw_text"],
+    "allowedOutputs": ["sanitized_prompt_object", "phi_scrubbed_payload"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_scrubbed", "label": "Scrubbed Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "redact_mrn",
+        "label": "Redact Medical Record Numbers (MRN)",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "phi_redactor",
+    "action": "scrub_phi"
+  }
+}
