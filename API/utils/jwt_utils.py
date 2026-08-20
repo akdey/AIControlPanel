@@ -8,7 +8,10 @@ ALGORITHM = "HS256"
 DEFAULT_EXPIRE_MINUTES = 480  # 8 hours
 
 def create_jwt_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
-    """Creates signed JWT token with claims: username, role, user_id, is_pwd_change_req, is_2fa_req, exp."""
+    """
+    Creates signed JWT token with claims: username, role, user_id, is_pwd_change_req, exp.
+    (Note: 2FA state is verified at login time and is omitted from standard API call JWT claims).
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -21,6 +24,6 @@ def create_jwt_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = 
 def decode_jwt_token(token: str) -> Dict[str, Any]:
     """
     Decodes and verifies JWT token signature and expiration.
-    Returns claims payload dict or raises Exception.
+    Returns claims payload dict or raises PyJWT Exception.
     """
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

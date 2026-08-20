@@ -2,21 +2,24 @@ import logging
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from core.jwt_utils import decode_jwt_token
-from core.rbac_policy import is_route_allowed_for_role
+from core.config import settings
+from utils.jwt_utils import decode_jwt_token
+from middlewares.rbac_policy import is_route_allowed_for_role
 
 logger = logging.getLogger(__name__)
 
-# List of public endpoints bypassing mandatory authentication checks
-PUBLIC_ROUTES = [
-    "/",
-    "/health",
-    "/docs",
-    "/openapi.json",
-    "/redoc",
-    "/api/v1/auth/authenticate",
-    "/api/v1/auth/login"
-]
+def get_public_routes() -> list[str]:
+    """Dynamically returns list of public routes bypassing authentication checks."""
+    api_prefix = settings.API_V1_STR
+    return [
+        "/",
+        "/health",
+        "/docs",
+        "/openapi.json",
+        "/redoc",
+        f"{api_prefix}/auth/authenticate",
+        f"{api_prefix}/auth/login"
+    ]
 
 class JWTAuthRBACMiddleware(BaseHTTPMiddleware):
     """
@@ -28,9 +31,12 @@ class JWTAuthRBACMiddleware(BaseHTTPMiddleware):
         if request.method.upper() == "OPTIONS":
             return await call_next(request)
 
-        # 2. Public Endpoints Whitelist Bypass
+        # 2. Public Endpoints Whitelist Bypass (Dynamic API Prefix)
         req_path = request.url.path
-        if any(req_path == route or req_path.startswith("/api/v1/auth/") for route in PUBLIC_ROUTES):
+        api_prefix = settings.API_V1_STR
+        public_routes = get_public_routes()
+        
+        if any(req_path == route or req_path.startswith(f"{api_prefix}/auth/") for route in public_routes):
             return await call_next(request)
 
         # 3. Extract JWT Token from 'x-access-token' Header (Case-Insensitive)
@@ -74,7 +80,7 @@ class JWTAuthRBACMiddleware(BaseHTTPMiddleware):
         request.state.username = username
         request.state.role = role
 
-        # 6. Validate Account Onboarding State (Password Change or 2FA Lock)
+        # 6. Validate Account Password Onboarding State
         if claims.get("is_pwd_change_req") and not req_path.endswith("/change-password"):
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,

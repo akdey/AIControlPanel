@@ -116,14 +116,13 @@ class UserService:
             # Password is correct — reset failed attempts
             user.failed_attempts = 0
 
-            from core.jwt_utils import create_jwt_token
+            from utils.jwt_utils import create_jwt_token
             jwt_token = create_jwt_token({
                 "sub": user.username,
                 "username": user.username,
                 "role": user.role,
                 "user_id": user.id,
-                "is_pwd_change_req": user.is_pwd_change_req,
-                "is_2fa_req": user.is_2fa_req
+                "is_pwd_change_req": user.is_pwd_change_req
             })
 
             # Check Two-Factor Authentication (2FA) requirement

@@ -1,17 +1,23 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from core.config import settings
 from core.logger_config import setup_logging
-from core.logging_middleware import RequestResponseLoggingMiddleware
 from core.database import engine, Base, SessionLocal
+from core.config_loader import config_data
+from core.exceptions import BaseAppException
+from middlewares.logging_middleware import RequestResponseLoggingMiddleware
+from middlewares.rbac_middleware import JWTAuthRBACMiddleware
 from modules.projects.models import Project, Agent
 from modules.pipeline.models import Pipeline
 from modules.users.models import User
 from modules.users.service import hash_password
-from core.config_loader import config_data
+from utils.datetime_utils import get_datetime
+
 from modules.projects.router import router as projects_router
 from modules.canvas.router import router as canvas_router
 from modules.pipeline.router import router as pipeline_router
@@ -22,7 +28,6 @@ from modules.users.router import users_router, auth_router
 
 # Initialize stdout & persistent file logger (logs/control_plane.log)
 logger = setup_logging()
-
 
 def seed_initial_data():
     """Seeds SQLite DB with default initial project, agent, and pipeline if empty."""
@@ -71,8 +76,6 @@ def seed_initial_data():
     finally:
         db.close()
 
-from sqlalchemy import text
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB tables
@@ -102,18 +105,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from core.rbac_middleware import JWTAuthRBACMiddleware
-
 # JWT Authentication & RBAC Route Access Control Middleware
 app.add_middleware(JWTAuthRBACMiddleware)
 
 # Request & Response Audit Logging Middleware
 app.add_middleware(RequestResponseLoggingMiddleware)
-
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from core.exceptions import BaseAppException
-from utils.datetime_utils import get_datetime
 
 @app.exception_handler(BaseAppException)
 async def domain_exception_handler(request: Request, exc: BaseAppException):
@@ -129,7 +125,7 @@ async def domain_exception_handler(request: Request, exc: BaseAppException):
         }
     )
 
-# Include Routers with /api/v1 prefix
+# Include Routers with settings.API_V1_STR prefix dynamically
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(users_router, prefix=settings.API_V1_STR)
 app.include_router(projects_router, prefix=settings.API_V1_STR)

@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from core.jwt_utils import create_jwt_token
+from utils.jwt_utils import create_jwt_token
 
 def get_auth_headers(role: str = "super_admin") -> dict:
     token = create_jwt_token({

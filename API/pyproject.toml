@@ -36,7 +36,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["core", "AgentControlFunctions", "adaptive_layer", "modules", "utils"]
+packages = ["core", "AgentControlFunctions", "adaptive_layer", "modules", "utils", "middlewares"]
 
 [build-system]
 requires = ["hatchling"]
