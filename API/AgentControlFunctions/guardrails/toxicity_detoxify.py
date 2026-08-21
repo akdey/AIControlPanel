@@ -1,40 +1,57 @@
+"""
+Detoxify PyTorch Multi-Axis Toxicity Moderation Control Function (Phase 1)
+--------------------------------------------------------------------------
+Control ID: ctrl_toxicity_checker
+Engine Key: detoxify
+
+How This Control Works:
+1. Intercepts prompt text from `ctx.get_input_prompt("in_prompt")` or `ctx.prompt_object["prompt"]`.
+2. Evaluates 6 toxicity axes via Detoxify PyTorch model:
+   - General Toxicity
+   - Severe Toxicity
+   - Threat / Violence
+   - Insult / Profanity
+   - Obscenity
+   - Identity Attack
+3. Compares scores against configured thresholds (`threshold`, `severe_toxicity`, `threat`, `insult`).
+4. If toxic content is detected:
+   - Sets `ctx.execution_status = "blocked"` and `ctx.action_taken = "Halt"`.
+   - Records "TOXICITY_FLAG" in `ctx.taint_flags`.
+   - Routes payload to output handle `out_toxic`.
+5. If clean, routes payload to output handle `out_pass`.
+6. Enforces Fail-Closed policy: halts execution if model is offline or throws exceptions.
+"""
+
 import time
 import logging
 from typing import Dict, Any
 
 from AgentControlFunctions.context import PipelineContext
 from AgentControlFunctions.registry import register_control
-from detoxify import Detoxify
 
 logger = logging.getLogger(__name__)
 
-# Initialize Production Detoxify PyTorch Model
 try:
+    from detoxify import Detoxify
     detoxify_model = Detoxify("original")
     HAS_DETOXIFY = True
 except Exception as e:
     HAS_DETOXIFY = False
     logger.error(f"Critical: Detoxify PyTorch model failed to load ({e})")
 
-@register_control(["detoxify", "detoxify_classifier"])
+@register_control(["detoxify", "detoxify_classifier", "ctrl_toxicity_checker"])
 def execute_toxicity_detoxify(ctx: PipelineContext, node_config: Dict[str, Any]) -> PipelineContext:
     """
-    Production Fail-Closed Detoxify Content Moderation Classifier.
-    Evaluates multi-dimensional toxicity scores:
-      - general toxicity
-      - severe toxicity
-      - threat / violence
-      - insult / profanity
-      - obscenity & identity attack
-
-    Output Handles in sync with ctrl_toxicity_checker.json:
-      - out_pass: Safe Context (sanitized_prompt_object)
-      - out_toxic: Toxicity Flag (taint_flag)
+    Detoxify PyTorch Content Moderation Classifier.
+    Inputs:
+      - in_prompt: Input prompt text or object
+    Outputs:
+      - out_pass: Safe Context
+      - out_toxic: Toxic Flag Payload
     """
     start_time = time.time()
-    text = ctx.sanitized_prompt_object.get("prompt", ctx.prompt_object.get("prompt", ""))
+    text = ctx.get_input_prompt("in_prompt") or ctx.prompt_object.get("prompt", "")
     
-    # Read configured thresholds
     threshold = float(node_config.get("threshold", 0.75))
     sub_thresholds = node_config.get("subcategories", {}) or {}
     severe_threshold = float(sub_thresholds.get("severe_toxicity", node_config.get("severe_toxicity", 0.5)))
@@ -46,6 +63,7 @@ def execute_toxicity_detoxify(ctx: PipelineContext, node_config: Dict[str, Any])
         ctx.action_taken = "Halt"
         ctx.intercepted_control = "Toxicity Moderation"
         ctx.trigger_reason = "Security Guardrail Engine Unavailable: Detoxify PyTorch Model not loaded. Halted under Fail-Closed policy."
+        ctx.set_output("out_toxic", ctx.prompt_object)
         ctx.metadata["next_handle_id"] = "out_toxic"
         if "SECURITY_ENGINE_OFFLINE" not in ctx.taint_flags:
             ctx.taint_flags.append("SECURITY_ENGINE_OFFLINE")
@@ -64,14 +82,13 @@ def execute_toxicity_detoxify(ctx: PipelineContext, node_config: Dict[str, Any])
         ctx.action_taken = "Halt"
         ctx.intercepted_control = "Toxicity Moderation"
         ctx.trigger_reason = f"Toxicity Security Evaluation Error ({str(e)}). Halted under Fail-Closed policy."
+        ctx.set_output("out_toxic", ctx.prompt_object)
         ctx.metadata["next_handle_id"] = "out_toxic"
         return ctx
 
-    # Store full scores in metadata
     ctx.metadata["toxicity_score"] = toxicity_score
     ctx.metadata["toxicity_scores"] = scores
 
-    # Determine if any general or sub-category threshold is breached
     is_toxic = False
     violations = []
 
@@ -97,11 +114,13 @@ def execute_toxicity_detoxify(ctx: PipelineContext, node_config: Dict[str, Any])
         ctx.action_taken = "Halt"
         ctx.intercepted_control = "Toxicity Moderation"
         ctx.trigger_reason = f"Toxicity thresholds exceeded: {', '.join(violations)}."
+        ctx.set_output("out_toxic", ctx.prompt_object)
         ctx.metadata["next_handle_id"] = "out_toxic"
         if "TOXICITY_FLAG" not in ctx.taint_flags:
             ctx.taint_flags.append("TOXICITY_FLAG")
     else:
         status = "passed"
+        ctx.set_output("out_pass", ctx.prompt_object)
         ctx.metadata["next_handle_id"] = "out_pass"
 
     end_time = time.time()

@@ -1,64 +1,37 @@
 {
   "id": "ctrl_generic_rule_evaluator",
-  "type": "dynamic_router",
-  "name": "Dynamic Rule Evaluator",
+  "type": "routing",
+  "name": "Sandboxed Python Expression Evaluator",
   "category": "routing",
   "subcategory": "logic_gates",
-  "description": "Evaluates dynamic N-condition rules comparing arbitrary preceding node outputs (PII, Toxicity, FinOps, LLM, or custom) using customizable operators and logic.",
+  "description": "Evaluates dynamic Python expressions against upstream node outputs and metadata using sandboxed simpleeval.",
+  "status": "inactive",
+  "active": false,
   "ioValidation": {
-    "allowedInputs": ["scored_payload", "redaction_metadata", "generic_context", "sanitized_prompt_object"],
-    "allowedOutputs": ["prompt_object", "halt_signal", "alert_signal"]
+    "allowedInputs": ["sanitized_prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
   },
   "ports": {
-    "inputs": [{ "id": "in_eval", "label": "Evaluated Data", "type": "sanitized_prompt_object" }],
+    "inputs": [{ "id": "in_data", "label": "Data In", "type": "sanitized_prompt_object" }],
     "outputs": [
-      { "id": "out_match", "label": "Rule Match (True)", "type": "sanitized_prompt_object" },
-      { "id": "out_nomatch", "label": "No Match (False)", "type": "sanitized_prompt_object" }
+      { "id": "out_true", "label": "Rule Match Pass", "type": "sanitized_prompt_object" },
+      { "id": "out_false", "label": "Rule Mismatch Pass", "type": "sanitized_prompt_object" }
     ]
   },
   "uiForm": {
     "layout": "vertical",
     "fields": [
       {
-        "name": "logic",
-        "label": "Match Logic Condition",
-        "type": "dropdown",
-        "defaultValue": "AND",
-        "options": [
-          { "label": "Match ALL Conditions (AND)", "value": "AND" },
-          { "label": "Match ANY Condition (OR)", "value": "OR" }
-        ],
-        "helperText": "Logical connective used to combine rule evaluations."
-      },
-      {
-        "name": "action_on_match",
-        "label": "Action on Match",
-        "type": "dropdown",
-        "defaultValue": "BLOCK",
-        "options": [
-          { "label": "Halt Pipeline & Block Request (BLOCK)", "value": "BLOCK" },
-          { "label": "Flag Content & Redact Payload (REDACT)", "value": "REDACT" },
-          { "label": "Route to High-Risk Output Port (ROUTE)", "value": "ROUTE" }
-        ],
-        "helperText": "Action taken when the dynamic rules evaluate to True."
-      },
-      {
-        "name": "rules",
-        "label": "Evaluation Rules",
-        "type": "dynamic_rule_builder",
-        "defaultValue": [
-          {
-            "portIdentifier": "out_match",
-            "portLabel": "Rule Match Triggered",
-            "outputType": "sanitized_prompt_object",
-            "condition": { "==": [{ "var": "action_taken" }, "Redact"] }
-          }
-        ]
+        "name": "expression",
+        "label": "Evaluation Expression",
+        "type": "text",
+        "defaultValue": "metadata.get('toxicity_score', 0) < 0.75",
+        "helperText": "Sandboxed Python boolean expression."
       }
     ]
   },
   "runtimeConfig": {
-    "engine": "generic_condition_evaluator",
-    "action": "evaluate_rules"
+    "engine": "generic_rule_evaluator",
+    "action": "evaluate_expression"
   }
 }

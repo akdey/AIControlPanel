@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_ssrf_egress_guard",
+  "type": "tool_governance",
+  "name": "SSRF & Network Egress Guard",
+  "category": "tool_governance",
+  "subcategory": "sql_bash_guard",
+  "description": "Inspects URL targets in tool calls, resolving DNS hostnames and blocking internal loopback and private CIDRs (127.0.0.1, 169.254.169.254, 10.0.0.0/8). (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_url", "label": "URL Payload In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_pass", "label": "Egress Allowed", "type": "sanitized_prompt_object" },
+      { "id": "out_block", "label": "SSRF Blocked", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "blocked_cidrs",
+        "label": "Blocked Network CIDRs",
+        "type": "text",
+        "defaultValue": "127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16",
+        "helperText": "Comma-separated IP CIDR blocks to deny egress to."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "ssrf_egress_guard",
+    "action": "check_ssrf"
+  }
+}

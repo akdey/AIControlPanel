@@ -1,26 +1,43 @@
 {
   "id": "ctrl_rate_limiter",
-  "name": "TPM / RPM Token Budgeter",
+  "type": "finops",
+  "name": "Token Bucket Rate Limiter (Redis)",
   "category": "finops",
-  "subcategory": "routing",
+  "subcategory": "rate_limiting",
   "version": "1.0.0",
-  "description": "Enforces per-tenant and per-agent token-per-minute and request-per-minute rate limits.",
-  "author": "FinOps & Rate Control",
+  "description": "Enforces per-user, per-IP, or per-tenant Token-per-Minute (TPM) and Request-per-Minute (RPM) rate limits (returns HTTP 429 when limit exceeded).",
+  "status": "active",
+  "active": true,
   "ports": {
     "inputs": [
       { "id": "in_prompt", "label": "Prompt Input", "type": "prompt_object" }
     ],
     "outputs": [
-      { "id": "out_pass", "label": "Within Budget", "type": "prompt_object" }
+      { "id": "out_pass", "label": "Within Budget Pass", "type": "sanitized_prompt_object" },
+      { "id": "out_rate_exceeded", "label": "Rate Exceeded (429)", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "max_rpm",
+        "label": "Max Requests per Minute (RPM)",
+        "type": "number",
+        "defaultValue": 60,
+        "helperText": "Maximum request rate allowed per minute."
+      },
+      {
+        "name": "max_tpm",
+        "label": "Max Tokens per Minute (TPM)",
+        "type": "number",
+        "defaultValue": 100000,
+        "helperText": "Maximum token rate allowed per minute."
+      }
     ]
   },
   "runtimeConfig": {
     "engine": "rate_limiter",
-    "timeoutMs": 50,
-    "fallbackAction": "block"
-  },
-  "configValues": {
-    "max_tpm": 100000,
-    "max_rpm": 600
+    "action": "check_rate_limit"
   }
 }

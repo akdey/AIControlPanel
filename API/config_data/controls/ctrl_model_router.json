@@ -1,15 +1,15 @@
 {
   "id": "ctrl_model_router",
-  "type": "finops",
-  "name": "Dynamic Model Router (Cost / Quality)",
-  "category": "finops",
-  "subcategory": "routing",
-  "description": "Evaluates prompt length & complexity to dynamically select the optimal target model using existing LiteLLM Gateway.",
-  "status": "enabled",
-  "is_enabled": true,
+  "type": "routing",
+  "name": "Complexity-Based Model Cascade Router",
+  "category": "routing",
+  "subcategory": "cascade_routing",
+  "description": "Evaluates prompt token length & complexity to dynamically select the optimal target model (e.g. gpt-4o-mini vs gpt-4o).",
+  "status": "active",
+  "active": true,
   "ioValidation": {
     "allowedInputs": ["prompt_object"],
-    "allowedOutputs": ["selected_model_target"]
+    "allowedOutputs": ["sanitized_prompt_object"]
   },
   "ports": {
     "inputs": [{ "id": "in_prompt", "label": "Prompt In", "type": "prompt_object" }],
@@ -21,22 +21,23 @@
       {
         "name": "fast_model",
         "label": "Fast / Cheap Model Target",
-        "type": "text_input",
+        "type": "text",
         "defaultValue": "gpt-4o-mini",
-        "placeholder": "e.g. gpt-4o-mini"
+        "helperText": "SLM target model name for low-complexity queries."
       },
       {
         "name": "premium_model",
         "label": "Premium Model Target",
-        "type": "text_input",
+        "type": "text",
         "defaultValue": "gpt-4o",
-        "placeholder": "e.g. gpt-4o"
+        "helperText": "Frontier LLM target model name for high-complexity queries."
       },
       {
         "name": "complexity_token_threshold",
         "label": "Complexity Token Threshold",
-        "type": "number_input",
-        "defaultValue": 500
+        "type": "number",
+        "defaultValue": 500,
+        "helperText": "Token count threshold beyond which query is routed to premium model."
       }
     ]
   },

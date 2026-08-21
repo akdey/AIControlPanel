@@ -1,26 +1,41 @@
 {
   "id": "ctrl_tool_sanitizer",
-  "type": "sandboxing",
-  "name": "Tool Call Parameter Sanitizer",
-  "category": "sandboxing",
-  "subcategory": "tool_governance",
-  "description": "Validates function call arguments against Pydantic type schemas before invocation. (Phase 2)",
-  "status": "disabled",
-  "is_enabled": false,
+  "type": "tool_governance",
+  "name": "Tool Manifest RBAC Filter",
+  "category": "tool_governance",
+  "subcategory": "manifest_rbac",
+  "description": "Inspects and filters agent tool definitions (function call manifest) based on user roles and allowed tool lists before dispatching to the LLM.",
+  "status": "active",
+  "active": true,
   "ioValidation": {
-    "allowedInputs": ["tool_call_payload"],
-    "allowedOutputs": ["validated_tool_call"]
+    "allowedInputs": ["tool_manifest"],
+    "allowedOutputs": ["filtered_tool_manifest"]
   },
   "ports": {
-    "inputs": [{ "id": "in_tool", "label": "Tool Call In", "type": "prompt_object" }],
-    "outputs": [{ "id": "out_valid", "label": "Valid Call Out", "type": "sanitized_prompt_object" }]
+    "inputs": [{ "id": "in_tools", "label": "Tools In", "type": "tool_manifest" }],
+    "outputs": [{ "id": "out_sanitized", "label": "Sanitized Tools Out", "type": "tool_manifest" }]
   },
   "uiForm": {
     "layout": "vertical",
-    "fields": []
+    "fields": [
+      {
+        "name": "allowed_tools",
+        "label": "Allowed Tool Names",
+        "type": "text",
+        "defaultValue": "*",
+        "helperText": "Comma-separated list of allowed tool names (e.g. 'get_weather, search_docs') or '*' for all."
+      },
+      {
+        "name": "blocked_tools",
+        "label": "Blocked Tool Names",
+        "type": "text",
+        "defaultValue": "execute_sql, delete_user, terminate_instance",
+        "helperText": "Comma-separated list of tool names to strip from the agent manifest."
+      }
+    ]
   },
   "runtimeConfig": {
     "engine": "tool_sanitizer",
-    "action": "sanitize_tool"
+    "action": "filter_tools"
   }
 }

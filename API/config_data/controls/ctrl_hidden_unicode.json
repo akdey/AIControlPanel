@@ -1,0 +1,34 @@
+{
+  "id": "ctrl_hidden_unicode",
+  "type": "guardrails",
+  "name": "Invisible Unicode & Homoglyph Stripper",
+  "category": "guardrails",
+  "subcategory": "input_safety",
+  "description": "Performs NFKC normalization using Python unicodedata; strips zero-width spaces (\u200B), homoglyphs, and bi-directional text direction tricks. (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_text", "label": "Text In", "type": "prompt_object" }],
+    "outputs": [{ "id": "out_normalized", "label": "Normalized Out", "type": "sanitized_prompt_object" }]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "normalize_nfkc",
+        "label": "NFKC Normalization",
+        "type": "boolean",
+        "defaultValue": true,
+        "helperText": "Convert homoglyphs and compatibility characters to canonical forms."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "hidden_unicode",
+    "action": "strip_hidden_unicode"
+  }
+}

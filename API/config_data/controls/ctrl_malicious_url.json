@@ -5,8 +5,8 @@
   "category": "guardrails",
   "subcategory": "input_safety",
   "description": "Extracts embedded URLs from prompts or outputs and checks domain reputation feeds for phishing/malware threats.",
-  "status": "enabled",
-  "is_enabled": true,
+  "status": "active",
+  "active": true,
   "ioValidation": {
     "allowedInputs": ["prompt_object", "raw_text"],
     "allowedOutputs": ["sanitized_prompt_object", "url_analysis"]

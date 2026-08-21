@@ -1,42 +1,32 @@
 {
   "id": "ctrl_decision_gate",
-  "type": "dynamic_router",
-  "name": "Conditional Decision Gate",
+  "type": "routing",
+  "name": "Dynamic Boolean Decision Gate",
   "category": "routing",
   "subcategory": "logic_gates",
-  "description": "Evaluates contextual metadata against rule conditions and branches execution paths dynamically.",
+  "description": "Evaluates accumulated security status or taint flags (e.g. is_blocked or taint_flags) and branches execution paths dynamically.",
+  "status": "active",
+  "active": true,
   "ioValidation": {
-    "allowedInputs": ["scored_payload", "redaction_metadata", "generic_context", "sanitized_prompt_object"],
-    "allowedOutputs": ["prompt_object", "halt_signal", "alert_signal"]
+    "allowedInputs": ["sanitized_prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
   },
   "ports": {
-    "inputs": [{ "id": "in_eval", "label": "Evaluated Data", "type": "sanitized_prompt_object" }],
+    "inputs": [{ "id": "in_eval", "label": "Evaluated Data In", "type": "sanitized_prompt_object" }],
     "outputs": [
       { "id": "out_pass", "label": "Pass Branch", "type": "sanitized_prompt_object" },
-      { "id": "out_block", "label": "Block Branch", "type": "security_refusal" }
+      { "id": "out_block", "label": "Block Branch", "type": "sanitized_prompt_object" }
     ]
   },
   "uiForm": {
     "layout": "vertical",
     "fields": [
       {
-        "name": "routing_rules",
-        "label": "Routing Conditions",
-        "type": "dynamic_rule_builder",
-        "defaultValue": [
-          {
-            "portIdentifier": "out_block",
-            "portLabel": "Critical Violation (> 0.90)",
-            "outputType": "security_refusal",
-            "condition": { ">": [{ "var": "metadata.toxicity" }, 0.9] }
-          },
-          {
-            "portIdentifier": "out_pass",
-            "portLabel": "Clean / Allowed (<= 0.90)",
-            "outputType": "sanitized_prompt_object",
-            "condition": { "<=": [{ "var": "metadata.toxicity" }, 0.9] }
-          }
-        ]
+        "name": "block_on_any_taint",
+        "label": "Block on Any Security Taint Flag",
+        "type": "boolean",
+        "defaultValue": true,
+        "helperText": "Route to out_block if any security taint flag (PII_DETECTED, TOXICITY_FLAG, etc.) is present."
       }
     ]
   },

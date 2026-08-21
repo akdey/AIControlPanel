@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_tool_param_schema",
+  "type": "tool_governance",
+  "name": "Tool Parameter Schema Validator",
+  "category": "tool_governance",
+  "subcategory": "manifest_rbac",
+  "description": "Validates tool call arguments against strict OpenAPI/JSON schemas using fastjsonschema before execution. (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_params", "label": "Params In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_valid", "label": "Schema Valid Pass", "type": "sanitized_prompt_object" },
+      { "id": "out_invalid", "label": "Schema Invalid Halt", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "strict_type_coercion",
+        "label": "Strict Type Coercion",
+        "type": "boolean",
+        "defaultValue": false,
+        "helperText": "Attempt automatic coercion of stringified numbers/booleans to declared JSON schema types."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "tool_param_schema",
+    "action": "validate_param_schema"
+  }
+}

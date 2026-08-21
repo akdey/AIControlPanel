@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_indirect_injection",
+  "type": "guardrails",
+  "name": "Indirect Injection & Delimiter Shield",
+  "category": "guardrails",
+  "subcategory": "indirect_injection",
+  "description": "Sanitizes untrusted RAG documents and web search results; strips <script> tags, system instruction overrides, and hidden injection delimiters (OWASP ASI01). (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_rag", "label": "RAG Context In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_clean", "label": "Clean RAG Out", "type": "sanitized_prompt_object" },
+      { "id": "out_quarantined", "label": "Quarantined Out", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "strip_script_tags",
+        "label": "Strip HTML & Script Tags",
+        "type": "boolean",
+        "defaultValue": true,
+        "helperText": "Remove all HTML script tags and embedded JS from untrusted context."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "indirect_injection",
+    "action": "sanitize_rag_context"
+  }
+}

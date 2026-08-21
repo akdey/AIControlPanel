@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_bash_cmd_sandbox",
+  "type": "tool_governance",
+  "name": "Shell Command AST Inspector (bashlex)",
+  "category": "tool_governance",
+  "subcategory": "sql_bash_guard",
+  "description": "Parses terminal execution commands into AST using bashlex, blocking destructive operations (rm -rf, sudo, reverse shells). (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_cmd", "label": "Command In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_pass", "label": "Safe Cmd Pass", "type": "sanitized_prompt_object" },
+      { "id": "out_block", "label": "Blocked Out", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "forbidden_commands",
+        "label": "Forbidden Commands",
+        "type": "text",
+        "defaultValue": "rm, sudo, mkfs, dd, shutdown, reboot, chmod, chown",
+        "helperText": "Comma-separated shell commands to block via AST."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "bash_cmd_sandbox",
+    "action": "check_bash_ast"
+  }
+}

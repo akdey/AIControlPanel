@@ -1,26 +1,44 @@
 {
   "id": "ctrl_sql_guardrail",
-  "type": "sandboxing",
-  "name": "Database SQL Query Guardrail",
-  "category": "sandboxing",
-  "subcategory": "sql_governance",
-  "description": "Enforces read-only SELECT queries, blocking destructive SQL operations (DROP, DELETE, UPDATE). (Phase 2)",
-  "status": "disabled",
-  "is_enabled": false,
+  "type": "tool_governance",
+  "name": "SQL Query AST Inspector (sqlglot)",
+  "category": "tool_governance",
+  "subcategory": "sql_bash_guard",
+  "description": "Parses generated SQL queries or tool payload SQL parameters into Abstract Syntax Trees (AST) using sqlglot, blocking schema mutation (DROP, ALTER) and destructive operations.",
+  "status": "active",
+  "active": true,
   "ioValidation": {
-    "allowedInputs": ["sql_query_text"],
-    "allowedOutputs": ["sql_safety_status"]
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
   },
   "ports": {
     "inputs": [{ "id": "in_sql", "label": "SQL In", "type": "prompt_object" }],
-    "outputs": [{ "id": "out_safe", "label": "Safe SQL Out", "type": "sanitized_prompt_object" }]
+    "outputs": [
+      { "id": "out_pass", "label": "Safe SQL Pass", "type": "sanitized_prompt_object" },
+      { "id": "out_block", "label": "Blocked Out", "type": "sanitized_prompt_object" }
+    ]
   },
   "uiForm": {
     "layout": "vertical",
-    "fields": []
+    "fields": [
+      {
+        "name": "blocked_statements",
+        "label": "Blocked SQL Statements",
+        "type": "text",
+        "defaultValue": "DROP, DELETE, ALTER, TRUNCATE, INSERT, UPDATE",
+        "helperText": "Comma-separated SQL statement types to block using sqlglot AST parsing."
+      },
+      {
+        "name": "allow_multi_statements",
+        "label": "Allow Multi-Statement Queries",
+        "type": "boolean",
+        "defaultValue": false,
+        "helperText": "Allow multiple SQL queries separated by semicolons (prohibited by default to prevent SQL injection)."
+      }
+    ]
   },
   "runtimeConfig": {
     "engine": "sql_guardrail",
-    "action": "check_sql"
+    "action": "check_sql_ast"
   }
 }

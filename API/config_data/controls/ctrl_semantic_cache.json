@@ -1,26 +1,36 @@
 {
   "id": "ctrl_semantic_cache",
-  "name": "Semantic Vector Cache",
+  "type": "optimization",
+  "name": "Vector Semantic Cache (faiss-cpu)",
   "category": "optimization",
   "subcategory": "caching",
   "version": "1.0.0",
-  "description": "Caches identical or semantically similar prompts to save token latency and LLM cost.",
-  "author": "Performance Engineering",
+  "description": "Embeds input prompts using sentence-transformers and checks FAISS vector index; returns cached LLM response when cosine similarity >= threshold.",
+  "status": "active",
+  "active": true,
   "ports": {
     "inputs": [
       { "id": "in_prompt", "label": "Prompt Input", "type": "prompt_object" }
     ],
     "outputs": [
-      { "id": "out_hit", "label": "Cache Hit", "type": "completion" },
-      { "id": "out_miss", "label": "Cache Miss", "type": "prompt_object" }
+      { "id": "out_hit", "label": "Cache Hit Return", "type": "sanitized_prompt_object" },
+      { "id": "out_miss", "label": "Cache Miss Pass", "type": "prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "cosine_threshold",
+        "label": "Cosine Similarity Threshold",
+        "type": "number",
+        "defaultValue": 0.92,
+        "helperText": "Minimum cosine similarity score required for a cache hit."
+      }
     ]
   },
   "runtimeConfig": {
     "engine": "semantic_cache",
-    "timeoutMs": 80,
-    "fallbackAction": "pass"
-  },
-  "configValues": {
-    "cosine_threshold": 0.92
+    "action": "check_cache"
   }
 }

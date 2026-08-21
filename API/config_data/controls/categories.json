@@ -1,63 +1,88 @@
 {
-  "version": "2.0.0",
+  "version": "2.2.0",
   "categories": [
     {
       "id": "guardrails",
-      "label": "Guardrails & Moderation",
+      "label": "Pre-Call Input & Prompt Safety",
       "icon": "ShieldAlert",
       "subcategories": [
-        { "id": "input_safety", "label": "PII & Secret Protection" },
-        { "id": "content_moderation", "label": "Content Moderation & Jailbreaks" },
-        { "id": "privacy", "label": "HIPAA & De-Anonymization" }
+        { "id": "input_safety", "label": "PII, Secret & PHI Protection" },
+        { "id": "content_moderation", "label": "Prompt Injection & Jailbreak Shield" },
+        { "id": "indirect_injection", "label": "Indirect Injection & Delimiter Shield" },
+        { "id": "toxicity", "label": "Multi-Axis Toxicity Moderation" }
+      ]
+    },
+    {
+      "id": "tool_governance",
+      "label": "Tool, MCP & Skill Governance",
+      "icon": "Wrench",
+      "subcategories": [
+        { "id": "manifest_rbac", "label": "Tool Manifest RBAC Filter" },
+        { "id": "mcp_provenance", "label": "MCP Signature & Skill Verifier" },
+        { "id": "blast_radius", "label": "Destructive Action Classifier" },
+        { "id": "sql_bash_guard", "label": "SQL & Shell AST Guardrails" }
       ]
     },
     {
       "id": "optimization",
-      "label": "Optimization & Refinement",
+      "label": "Context, Memory & Vector Hygiene",
       "icon": "Zap",
       "subcategories": [
-        { "id": "token_pruning", "label": "Prompt Compression" },
-        { "id": "refinement", "label": "Prompt Refinement" },
-        { "id": "caching", "label": "Semantic Vector Cache" }
-      ]
-    },
-    {
-      "id": "finops",
-      "label": "FinOps & Resource Control",
-      "icon": "DollarSign",
-      "subcategories": [
-        { "id": "routing", "label": "Dynamic Model Router" },
-        { "id": "context_management", "label": "Context Window Truncator" }
+        { "id": "caching", "label": "Semantic Vector Cache" },
+        { "id": "token_pruning", "label": "Prompt Compression (LLMLingua2)" },
+        { "id": "memory_shield", "label": "Memory Poisoning Shield" },
+        { "id": "system_anchor", "label": "System Instruction Anchor" }
       ]
     },
     {
       "id": "routing",
-      "label": "Traffic & Routing Logic",
+      "label": "Traffic Routing & Model Cascades",
       "icon": "GitFork",
       "subcategories": [
+        { "id": "cascade_routing", "label": "Complexity Model Cascade" },
         { "id": "logic_gates", "label": "Decision Gates & Evaluators" },
-        { "id": "traffic_split", "label": "A/B Testing & Canary" },
-        { "id": "approval_gate", "label": "Human-in-the-Loop Approval" }
+        { "id": "traffic_split", "label": "A/B Canary Traffic Splitter" },
+        { "id": "circuit_breaker", "label": "Provider Health Circuit Breaker" }
       ]
     },
     {
-      "id": "knowledge",
-      "label": "Knowledge & RAG (Phase 2)",
-      "icon": "BookOpen",
+      "id": "finops",
+      "label": "FinOps, Rate Limits & Recursion",
+      "icon": "DollarSign",
       "subcategories": [
-        { "id": "rag_eval", "label": "Groundedness & Hallucinations" },
-        { "id": "retrieval", "label": "Vector DB Context" },
-        { "id": "chunking", "label": "Semantic Document Chunking" }
+        { "id": "rate_limiting", "label": "Token Bucket Rate Limiter" },
+        { "id": "budget_ceiling", "label": "Per-Session Spend Ceiling" },
+        { "id": "loop_limiter", "label": "Agent Recursion & Step Limiter" }
+      ]
+    },
+    {
+      "id": "output_guardrails",
+      "label": "Post-Call Output & Response Safety",
+      "icon": "ShieldCheck",
+      "subcategories": [
+        { "id": "groundedness", "label": "Hallucination & Faithfulness" },
+        { "id": "output_scrubber", "label": "Response Secret & PII Scrubber" },
+        { "id": "code_scanner", "label": "Generated Code AST Inspector" },
+        { "id": "json_schema", "label": "Structured Output Schema Enforcer" }
       ]
     },
     {
       "id": "sandboxing",
-      "label": "Execution Sandbox (Phase 2)",
+      "label": "Execution Sandbox & MicroVM",
       "icon": "Box",
       "subcategories": [
-        { "id": "microvm", "label": "Isolated Code MicroVM" },
-        { "id": "tool_governance", "label": "Tool Parameter Sanitizer" },
-        { "id": "sql_governance", "label": "SQL Query Guardrail" }
+        { "id": "microvm", "label": "Firecracker MicroVM Sandbox" },
+        { "id": "wasm_runtime", "label": "Wasm Isolated Plugin Runtime" },
+        { "id": "dry_run", "label": "Tool Mock & Dry-Run Simulator" }
+      ]
+    },
+    {
+      "id": "hitl_compliance",
+      "label": "Human-in-the-Loop & Compliance",
+      "icon": "UserCheck",
+      "subcategories": [
+        { "id": "approval_gate", "label": "Async Human Approval Gate" },
+        { "id": "audit_signer", "label": "Cryptographic Trace Signer" }
       ]
     }
   ]

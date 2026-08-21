@@ -1,16 +1,30 @@
+"""
+Microsoft Presidio PII Masking Control Function (Phase 1)
+---------------------------------------------------------
+Control ID: ctrl_pii_masking
+Engine Key: presidio_analyzer
+
+How This Control Works:
+1. Intercepts prompt text from `ctx.get_input_prompt("in_text")` or `ctx.prompt_object["prompt"]`.
+2. Runs Microsoft Presidio `AnalyzerEngine` to detect PII entities (Emails, Phone Numbers, SSNs, Credit Cards, IP addresses).
+3. If PII entities are found, passes analyzer results to `AnonymizerEngine` to replace PII with anonymized tokens (e.g. `[EMAIL_ADDRESS]`).
+4. If node_config `action` is "BLOCK", halts pipeline execution (`ctx.execution_status = "blocked"`).
+5. Updates `ctx.sanitized_prompt_object["prompt"]` and emits payload on output handle `out_sanitized`.
+6. Enforces Fail-Closed policy: if Presidio engine is unavailable or throws an exception, halts execution immediately to avoid data leakage.
+"""
+
 import time
 import logging
 from typing import Dict, Any
 
 from AgentControlFunctions.context import PipelineContext
 from AgentControlFunctions.registry import register_control
-from presidio_analyzer import AnalyzerEngine
-from presidio_anonymizer import AnonymizerEngine
 
 logger = logging.getLogger(__name__)
 
-# Initialize Production Presidio Analyzer & Anonymizer Engines
 try:
+    from presidio_analyzer import AnalyzerEngine
+    from presidio_anonymizer import AnonymizerEngine
     presidio_analyzer_engine = AnalyzerEngine()
     presidio_anonymizer_engine = AnonymizerEngine()
     HAS_PRESIDIO = True
@@ -18,15 +32,17 @@ except Exception as e:
     HAS_PRESIDIO = False
     logger.error(f"Critical: Microsoft Presidio PII Engine failed to load ({e})")
 
-@register_control(["presidio_analyzer"])
+@register_control(["presidio_analyzer", "ctrl_pii_masking"])
 def execute_pii_presidio(ctx: PipelineContext, node_config: Dict[str, Any]) -> PipelineContext:
     """
-    Production Fail-Closed Microsoft Presidio PII Masking & Redaction Engine.
-    Strict Fail-Closed Policy: If Presidio Engine is offline or fails, halts execution immediately
-    to prevent exposing un-sanitized PII to downstream LLMs.
+    Microsoft Presidio PII Masking & Redaction Engine.
+    Inputs:
+      - in_text: Input prompt or payload
+    Outputs:
+      - out_sanitized: Sanitized payload with PII redacted
     """
     start_time = time.time()
-    input_text = ctx.prompt_object.get("prompt", "")
+    input_text = ctx.get_input_prompt("in_text") or ctx.prompt_object.get("prompt", "")
 
     if not HAS_PRESIDIO:
         ctx.execution_status = "blocked"
@@ -57,6 +73,7 @@ def execute_pii_presidio(ctx: PipelineContext, node_config: Dict[str, Any]) -> P
     ctx.sanitized_prompt_object = dict(ctx.prompt_object)
     ctx.sanitized_prompt_object["prompt"] = sanitized_text
     ctx.prompt_object["prompt"] = sanitized_text
+    ctx.set_output("out_sanitized", ctx.sanitized_prompt_object)
 
     mutated_fields = []
     if redactions_found:

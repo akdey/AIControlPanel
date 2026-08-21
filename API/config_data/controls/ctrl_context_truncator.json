@@ -1,28 +1,29 @@
 {
   "id": "ctrl_context_truncator",
   "type": "finops",
-  "name": "Context Window Truncator",
+  "name": "Context Window Auto-Compactor (tiktoken)",
   "category": "finops",
-  "subcategory": "context_management",
-  "description": "Truncates conversation histories exceeding maximum token limits using tiktoken tokenizer.",
-  "status": "enabled",
-  "is_enabled": true,
+  "subcategory": "rate_limiting",
+  "description": "Counts tokens in conversation history (messages) using tiktoken and truncates oldest turns when approaching token budget limits.",
+  "status": "active",
+  "active": true,
   "ioValidation": {
     "allowedInputs": ["prompt_object"],
-    "allowedOutputs": ["truncated_messages_payload"]
+    "allowedOutputs": ["sanitized_prompt_object"]
   },
   "ports": {
     "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
-    "outputs": [{ "id": "out_truncated", "label": "Truncated Out", "type": "sanitized_prompt_object" }]
+    "outputs": [{ "id": "out_truncated", "label": "Compacted Out", "type": "sanitized_prompt_object" }]
   },
   "uiForm": {
     "layout": "vertical",
     "fields": [
       {
         "name": "max_token_budget",
-        "label": "Max Allowed Token Budget",
-        "type": "number_input",
-        "defaultValue": 4096
+        "label": "Max Token Budget",
+        "type": "number",
+        "defaultValue": 4096,
+        "helperText": "Maximum total token count permitted for conversation history."
       }
     ]
   },

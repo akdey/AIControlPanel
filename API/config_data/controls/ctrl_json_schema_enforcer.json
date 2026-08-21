@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_json_schema_enforcer",
+  "type": "output_guardrails",
+  "name": "Structured Output Schema Repair (json-repair)",
+  "category": "output_guardrails",
+  "subcategory": "json_schema",
+  "description": "Auto-repairs trailing commas, missing quotes, or unescaped characters in LLM JSON output using json-repair and fastjsonschema. (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_json", "label": "JSON In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_valid", "label": "Valid JSON Out", "type": "sanitized_prompt_object" },
+      { "id": "out_invalid", "label": "Invalid JSON Halt", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "auto_repair",
+        "label": "Auto Repair Malformed JSON",
+        "type": "boolean",
+        "defaultValue": true,
+        "helperText": "Attempt automatic syntax repair before schema validation."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "json_schema_enforcer",
+    "action": "repair_and_validate_json"
+  }
+}

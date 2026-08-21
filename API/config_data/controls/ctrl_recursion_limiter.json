@@ -1,0 +1,37 @@
+{
+  "id": "ctrl_recursion_limiter",
+  "type": "finops",
+  "name": "Agent Recursion & Step Limiter",
+  "category": "finops",
+  "subcategory": "loop_limiter",
+  "description": "Monitors agent execution step depth (metadata.step_count) to halt infinite tool calling loops. (Phase 2)",
+  "status": "inactive",
+  "active": false,
+  "ioValidation": {
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
+  },
+  "ports": {
+    "inputs": [{ "id": "in_step", "label": "Step Count In", "type": "prompt_object" }],
+    "outputs": [
+      { "id": "out_pass", "label": "Step Allowed Pass", "type": "sanitized_prompt_object" },
+      { "id": "out_limit_exceeded", "label": "Loop Exceeded Halt", "type": "sanitized_prompt_object" }
+    ]
+  },
+  "uiForm": {
+    "layout": "vertical",
+    "fields": [
+      {
+        "name": "max_steps",
+        "label": "Max Step Limit",
+        "type": "number",
+        "defaultValue": 15,
+        "helperText": "Maximum number of agent iterations permitted per session."
+      }
+    ]
+  },
+  "runtimeConfig": {
+    "engine": "recursion_limiter",
+    "action": "check_step_limit"
+  }
+}

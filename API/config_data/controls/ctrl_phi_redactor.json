@@ -1,28 +1,35 @@
 {
   "id": "ctrl_phi_redactor",
-  "type": "guardrail_evaluator",
+  "type": "guardrails",
   "name": "PHI (HIPAA) Compliance Scrubber",
   "category": "guardrails",
-  "subcategory": "privacy",
+  "subcategory": "input_safety",
   "description": "Specialized HIPAA privacy scrubber for Medical Record Numbers (MRN), Health Plan IDs, Diagnoses, and Patient Data.",
-  "status": "enabled",
-  "is_enabled": true,
+  "status": "active",
+  "active": true,
   "ioValidation": {
-    "allowedInputs": ["prompt_object", "raw_text"],
-    "allowedOutputs": ["sanitized_prompt_object", "phi_scrubbed_payload"]
+    "allowedInputs": ["prompt_object"],
+    "allowedOutputs": ["sanitized_prompt_object"]
   },
   "ports": {
     "inputs": [{ "id": "in_payload", "label": "Payload In", "type": "prompt_object" }],
-    "outputs": [{ "id": "out_scrubbed", "label": "Scrubbed Out", "type": "sanitized_prompt_object" }]
+    "outputs": [
+      { "id": "out_scrubbed", "label": "Scrubbed Out", "type": "sanitized_prompt_object" },
+      { "id": "out_block", "label": "PHI Blocked Out", "type": "sanitized_prompt_object" }
+    ]
   },
   "uiForm": {
     "layout": "vertical",
     "fields": [
       {
-        "name": "redact_mrn",
-        "label": "Redact Medical Record Numbers (MRN)",
-        "type": "toggle",
-        "defaultValue": true
+        "name": "action",
+        "label": "Action on PHI Detect",
+        "type": "dropdown",
+        "defaultValue": "REDACT",
+        "options": [
+          { "label": "Redact PHI Data (REDACT)", "value": "REDACT" },
+          { "label": "Halt Pipeline & Block Request (BLOCK)", "value": "BLOCK" }
+        ]
       }
     ]
   },
